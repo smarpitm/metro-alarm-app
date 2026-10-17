@@ -44,6 +44,7 @@ you are along your journey*.
 - [ ] Offline-first (no data connection needed after line data is cached)
 
 ### Later
+- [ ] Route planner (all lines, on-device): fastest route + least-changes route — see `docs/routing.md`
 - [ ] Multi-line journeys with interchange handling
 - [ ] Offline line/station timetable data packs (Delhi Metro, etc.)
 - [ ] Fallback ETA-clock alarm if GPS is unreliable underground (worst-case ETA from schedule)
@@ -93,4 +94,8 @@ exit alerts on transit directions but no "wake me 2 stops early" alarm.
 
 ## Status
 
-🚧 **Pre-code phase.** Repository initialised, planning docs only. No application code yet.
+🚧 **Early development.** React Native 0.88 (bare) + TypeScript scaffold in place; design docs in `docs/`; feature code comes next.
+
+- `docs/station-detection.md` — how the app knows stops remaining (Blue Line MVP)
+- `docs/routing.md` — on-device route planner: fastest & least-changes
+- `docs/decisions.md` — decision log (stack, APIs, scope choices)

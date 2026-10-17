@@ -1,0 +1,261 @@
+# Station Detection Design — Blue Line MVP
+
+_status: draft v1 · scope: Delhi Metro Blue Line · last updated: Oct 2026_
+
+## 1. Problem
+
+The alarm's job is simple: **"ring when the train is N stops (1–2 by default) from the
+rider's destination."** Everything the app does hangs on one continuous answer to:
+
+> How many stops remain between the train and the chosen destination?
+
+We deliberately do **not** try to answer the much harder question "which station is the
+phone in right now?" (full indoor positioning). We only need to **count stops along a
+known line**, which decomposes the problem into something solvable with phone sensors.
+
+Key tolerance: the system needs **±1 stop** accuracy, no more. Firing the alarm 2 stops
+before the destination (default) buys us a full station of error budget — a fire that is
+one stop too early is fine; the only real failure is *not firing before the destination*.
+
+## 2. Scope (MVP)
+
+- **Blue Line only.** One offline data file: stations in order (both branches), GPS
+  anchor coordinates, rough inter-station travel times.
+- Branches: **Dwarka Sector 21 ↔ Noida Electronic City** (main) and
+  **Yamuna Bank ↔ Vaishali**. Split/junction: **Yamuna Bank** — this is a branch split,
+  NOT an interchange. No multi-line routing anywhere in MVP.
+- Station count: ~50 stations total (main ~43 + branch ~8; exact count verified during
+  data collection from OpenStreetMap).
+- No live/train-position APIs. No server. Everything offline after the data pack ships.
+
+## 3. Signals available on the phone
+
+| Signal | Available | Role |
+|---|---|---|
+| GPS/network location | Above ground; unreliable/jumpy in tunnels | Primary anchor + speed/direction |
+| Accelerometer | Always | Stop counting in tunnels (dwell detection) |
+| Cell towers | Always (works offline) | Weak "which segment am I in" check |
+| WiFi | Mostly in stations | Future leverage, not MVP |
+
+Platform notes for React Native:
+
+- Location: background location permissions + a foreground service (Android) with a
+  persistent notification while a trip is active; iOS via significant-location-change +
+  background location mode (stricter; iOS is stretch for MVP, Android first).
+- Sensors: use the standard sensor APIs at a low duty cycle (only while GPS is poor).
+- Battery: Doze/battery-saver are the #1 reliability risk — the trip must run in a
+  foreground service, and the alarm itself must be a native full-screen notification +
+  looping sound (not a JS timer), or it dies with the process.
+
+## 4. Architecture overview
+
+```
+TripController (state machine)
+ ├── Input: LocationProvider (GPS fixes)
+ ├── Input: MotionAnalyzer (accelerometer → stop events)
+ ├── Input: CellTrack (cell-id changes; weak signal)
+ ├── Core: StopCounter (known line index ↔ number of stops remaining)
+ └── Output: AlarmScheduler (fire at N-stops-before-destination)
+```
+
+Data for the line (`data/blue_line.json`, committed, ~few KB):
+
+```json
+{
+  "line": "blue",
+  "branches": [
+    {
+      "id": "noida",
+      "termini": ["Dwarka Sector 21", "Noida Electronic City"],
+      "stations": [
+        {
+          "order": 0,
+          "name": "Dwarka Sector 21",
+          "lat": 28.5521, "lon": 77.0588,
+          "grade": "elevated",          // elevated | at-grade | underground
+          "median_time_to_next_s": 165   // verify empirically during data collection
+        }
+      ]
+    },
+    {
+      "id": "vaishali",
+      "splits_at_order": 22             // Yamuna Bank order in the parent list
+      "stations": "..."
+    }
+  ]
+}
+```
+
+`grade` and `median_time_to_next_s` are **placeholders until verified per station** —
+do not trust any station's underground/elevated classification until the data-collection
+pass (§9) confirms it.
+
+## 5. Trip state machine
+
+```
+IDLE → ARMED (user picks origin+destination+buffer)
+ARMED → RIDING (_trip start confirmed: at origin platform or first departure motion)
+RIDING → ALARMED (N stops remaining ≤ buffer, confidence high)
+ALARMED → DONE (user dismisses)
+any → FALLBACK_ETA (detection confidence low → schedule-based countdown)
+any → ABORTED (user cancels / arrival reached)
+```
+
+Confirmation of "trip started" needs care: don't start counting from platform waiting
+time, or the very first station departure miscounts. RIDING begins when the train has
+been continuously in motion for ≥ X seconds after entering the armed state.
+
+## 6. Detection algorithm (layered)
+
+### 6.1 Layer 1 — GPS anchor (above ground)
+
+- Continuous background fixes while RIDING.
+- Snap-to-station: if a fix is within `SNAP_RADIUS` (~200 m, tunable) of station k on
+  the user's branch, set `anchor = k`, `anchor_confidence = high`.
+- Heading/direction from consecutive fixes: pick the direction whose station sequence
+  is consistent with the anchor movement (resolves which terminus the train is bound
+  for — the very first decision the app makes).
+- Deliver resets to Layer 2 whenever an anchor is re-established.
+
+### 6.2 Layer 2 — stop counting (tunnel / GPS-poor)
+
+When fixes become unreliable (no accuracy-better-than-50 m fix for > 20 s), enter
+counting mode:
+
+- Accelerometer (low-rate, e.g. 10 Hz aggregated) classifies the motion as one of:
+  `moving / decelerating / stopped / accelerating`.
+- A `stop event` = `decelerating → stopped (15–90 s dwell) → accelerating`.
+- Each confirmed stop event ⇒ `stops_passed += 1`.
+- Pulse-validation against the data pack: the time since the previous confirmed stop
+  must be within `[.., max_tolerable_interval]` of the branch's inter-station times
+  (generous envelope, e.g. median × 2.5, because slow sections happen). An "arrival"
+  that comes impossibly early/late is rejected as noise (lift braking, long red signal,
+  being held).
+- Terminus/turn-back dwell (a train held at a platform for minutes) must not be counted
+  more than once: dedupe stops that are within one dwell window of each other.
+
+### 6.3 Layer 3 — soft resync
+
+- **Cell-id side-channel** (cheap, always on): cell tower changes are logged and
+  matched against a per-station tower/team fingerprint collected during data collection.
+  This alone never sets state; it only *scores candidate corrections*.
+- **WiFi APs in stations** (later): strong fingerprint signal, but Android scan
+  throttling + iOS restrictions make it Phase-2.
+
+### 6.4 Reconciliation rule
+
+Whenever a high-confidence GPS anchor appears:
+
+- If count and anchor disagree by ≥ 2 stops → trust the anchor, emit a correction.
+- If they disagree by 1 → trust the **count** only if its history is clean
+  (no rejected events), else trust the anchor. This asymmetry biases toward the
+  sensor-derived count, which responds instantly, while anchors lag.
+
+### 6.5 Branch disambiguation (Yamuna Bank)
+
+This is the one Blue-Line-specific hard case:
+
+- Before the split, the user's destination uniquely implies the branch; direction must
+  be locked in when the anchor confirms motion toward the split.
+- On the split itself the train's GPS anchor (`Yamuna Bank`, order K in each list)
+  plus observed next station resets the count — both branch station lists are modeled
+  as full ordered lists that share the prefix, so counting never Gets confused about
+  "which list am I on".
+- **Is the train splitting or continuing?** The observed direction after the split
+  decides; we don't need timetable knowledge.
+- What if the rider is asleep and stares at a wrong-branch train that passes Yamuna
+  Bank? The alarm never fires on the wrong branch because the destination simply
+  never enters the "stops remaining" window on that branch; when the train reaches the
+  terminus and reverses, the direction reset and new anchor fix it. Documented, known
+  behavior for MVP.
+
+### 6.6 Alarm decision
+
+```
+stops_remaining = destination_index - current_index    (direction-aware)
+fire_alarm when stops_remaining <= buffer (1 or 2) AND count_confidence >= HIGH
+```
+
+- Firing requires confidence ≥ high. Confidence comes from: time since last anchor,
+  number of clean confirmations in a row, and agreement between Layer 1 and Layer 3.
+- If confidence is not high as the train approaches windows (i.e., we estimate we are
+  within 3 stops), we **err on the side of firing early** — a fire one stop early is a
+  non-event; a missed alarm is a product-fatal failure. There's a hysteresis rule for
+  this in `AlarmScheduler`.
+
+### 6.7 Fallback — ETA clock
+
+If all sensors are unavailable/unreliable for a prolonged stretch (pull train in tunnel,
+phone in airplane mode, backgrounding kill), fall back to a schedule countdown:
+
+- estimated_arrival = last_anchor_time + Σ median inter-station times over the
+  remaining stops + (stops × dwell estimate)
+- Fire the fallback alarm at the ETA minus buffer×median inter-station interval.
+- This is strictly worse than counting (construction work, delays make it drift),
+  but it bounds the worst case. When any anchor/count signal returns, revert.
+
+## 7. Failure modes & mitigations
+
+| Failure | Effect | Mitigation |
+|---|---|---|
+| Phone killed/rebooted mid-trip | Alarm never fires | Foreground service + boot-alarm persistence deferred; app restarts into ARMED with last trip shown; log for postmortem |
+| Doze kills sensor polling | Missed stops | Foreground service keeps CPU; accelerometer running while trip is active |
+| Slow section / red signal | Over-counted stops | Inter-station time envelope + dwell dedup + anchor resync |
+| Two stations very close (GPS can't distinguish while moving) | Skipped count | Envelope tuning; can't fully eliminate for MVP (acceptably: counts reset at anchors) |
+| Express/non-stop running through a station (Blue Line service patterns) | Skipped count | The train's non-stop surge shows as one long `moving` stretch — count simply doesn't increment, correct |
+| GPS multipath / bounce between two adjacent platforms | Wrong anchor | Snap radius + require 2 consecutive consistent fixes to move the anchor |
+| Wrong-platform boarding (opposite direction) | Alarm fires at wrong-list indices | Direction locking at first departure (§6.1) + user-visible "heading to X" chip they can correct |
+| Trip crosses the Yamuna bridge (GPS good, high speed) | Fine | The bridge is above ground; anchors work |
+| Data pack wrong (a station mis-located) | Bad anchor | Data verification pass (§9); snap radius tolerates meter-level errors, not 100s of meters |
+
+## 8. Battery & permissions strategy (Android first)
+
+- Foreground service with persistent notification for the whole RIDING phase.
+- `ACCESS_FINE_LOCATION` + `ACCESS_BACKGROUND_LOCATION`; battery-optimization exemption
+  requested from the user with a clear explanation (this is the difference between the
+  app working and not working on most OEMs).
+- Sensor duty cycle: accelerometer at max ~10–25 Hz only while GPS is degraded;
+  GPS at ~1 Hz while above ground, throttled to 0 when counting-only.
+- The alarm path must be entirely native (AlarmManager exact alarm + full-screen intent +
+  ringtone + vibration), NOT JS. Only the *decisions* live in JS.
+
+## 9. Data collection & evaluation plan
+
+1. **Data collection rides** (the ground truth app, one debug screen):
+   - Record GPS fixes, cell ids, and accelerometer summaries with timestamps the whole ride.
+   - During each dwell, the tester taps "we just stopped at <station>" — cheap ground truth.
+   - Do 2–3 full-line runs each direction + both branches.
+2. **Derive** from recordings: per-station inter-station time stats (median, p90),
+   underground/elevated classification per station (GPS availability profile),
+   cell-tower fingerprints ("towers visible from this segment").
+3. **Offline replay**: the recorded traces are replayed through the StopCounter —
+   the detection engine is developed entirely against replay, never live.
+4. **Metrics** (on replay + later on live rides):
+   - missed_alarm_rate (target ≈ 0 — the fatal metric)
+   - false_early_alarm_rate (alarm > buffer+1 stops early): target < 10%
+   - count_drift_over_full_line: target ≤ 1 stop by journey end
+
+## 10. Build order (phases)
+
+| Phase | Deliverable | "Done" means |
+|---|---|---|
+| P0 | Data pack + collection app screen | blue_line.json verified on 2 runs/branch |
+| P1 | GPS-only path (anchors, direction, alarm) above ground | Replay of an above-ground run: alarm fires exactly at buffer stops |
+| P2 | Accelerometer stop counting + envelopes | Replay of tunnel sections full-line with ≤ 1 stop drift |
+| P3 | Cell-tower soft resync + reconciliation | Replay: injected GPS outages recover via towers/agreement |
+| P4 | ETA fallback + native alarm path | Alarm fires from a cold/backgrounded app reliably |
+| P5 | Field validation rides | Missed alarms = 0 across ≥ 10 real trips |
+
+## 11. Open questions
+
+- Does the ForegroundService pattern work reliably across OEM battery managers
+  (Xiaomi/Samsung/Oppo will backstab this)? Answer empirically in Phase P1/P4 with the
+  literal target OEMs of the rider demographic.
+- iOS in MVP or not? Backgroundlocation + accelerometer while locked is workable but
+  Apple's alarm/notification APIs make the *fire* UX worse. Proposal: Android only for
+  MVP, iOS after P5 if the detection engine proves out.
+- Wi-Fi scanning throttling on modern Android versions makes Layer 3's WiFi variant
+  unreliable to depend on — cell-only for MVP.
+- Is there any official open dataset of Delhi Metro station coordinates worth using
+  over OpenStreetMap? (Check DMRC open data / GTFS feeds first — if a GTFS feed exists
+  with stop_times, the inter-station time stats come for free.)

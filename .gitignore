@@ -53,3 +53,13 @@ coverage/
 # Misc
 *.log
 /tmp/
+
+# Ruby / CocoaPods (template)
+.bundle/
+vendor/bundle/
+
+# RN 0.88 template extras
+.cxx/
+.kotlin/
+*.hprof
+**/.xcode.env.local
