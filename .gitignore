@@ -63,3 +63,7 @@ vendor/bundle/
 .kotlin/
 *.hprof
 **/.xcode.env.local
+
+# local APKs & SDK config
+*.apk
+android/local.properties

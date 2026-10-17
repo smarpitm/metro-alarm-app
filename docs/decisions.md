@@ -6,7 +6,7 @@ Newest entries at the top. Keep entries small and factual; avoid re-litigating.
 ---
 
 ## D-008 · Route planner computed on-device, two rankings (time & transfers)
-**Date:** Oct 2026 · **Status:** design draft (`docs/routing.md`)
+**Date:** Oct 2026 · **Status:** implemented — engine + minimal UI + local debug APK (route planner first cut)
 
 - **Decision:** Route planning between any two stations runs 100% on-device —
   Fastest route via Dijkstra; Least-changes route via BFS on the line graph,
