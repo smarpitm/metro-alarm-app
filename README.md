@@ -23,6 +23,18 @@ you are along your journey*.
 
 ## Planned features (MVP → later)
 
+### MVP scope decision (Oct 2026)
+
+**MVP targets the Delhi Metro Blue Line only.**
+
+- One offline station table (station list in order, GPS anchors, inter-station times)
+- Both branches: Dwarka Sector 21 ↔ Noida Electronic City and Yamuna Bank ↔ Vaishali
+- Implication for detection: the app must treat **Yamuna Bank** as a branch split —
+  the destination and observed travel direction must disambiguate Vaishali vs
+  Noida Electronic City; a rider continuing straight through Yamuna Bank is NOT
+  changing lines.
+- No multi-city / multi-line data packs, no interchange routing, no timetable APIs.
+
 ### MVP
 - [ ] Select origin (auto-detect) and destination station
 - [ ] Choose "alarm before destination": 1 or 2 stops
