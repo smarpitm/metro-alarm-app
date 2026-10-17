@@ -39,6 +39,33 @@ you are along your journey*.
 - [ ] Sound profile customization, themes
 - [ ] History / favourites / recent trips
 
+## Existing alternatives (competitive landscape — researched Oct 2026)
+
+Generic GPS "wake me at my stop" apps already exist; none are metro-specific for India
+and most rely purely on raw GPS proximity, which is weak underground:
+
+| App | Platform | Summary |
+|---|---|---|
+| **Don't Miss the Stop: GPS Alarm** | Android | Real-time GPS tracking, loud alarm when near your stop. 4.2★ on Play Store. Closest generic competitor. |
+| **WakeStop: Station Wake Alarm** | iOS | Wake alarm on bus/tram/train; search a stop, set a wake-up radius. |
+| **Wake Me There – GPS Alarm** | Android | Free generic GPS alarm for commuters (MapFactor). |
+| **WakeMeApp** | iOS/Android | Alarm clock for long-distance train journeys |
+| **Bipit** | ? | Location-based transit wake-up alarm (indie launch, Reddit). |
+| **MetroNap** | iOS (2013) | Historic NYC subway nap-alarm app — concept validation, appears unmaintained. |
+
+Related-but-different: official metro apps (e.g., DMRC's app) offer route planning and
+station alert features but not a dependable loud wake-up alarm; Google Maps has station
+exit alerts on transit directions but no "wake me 2 stops early" alarm.
+
+### Differentiators to aim for
+
+1. **Station-aware, not radius-aware** — detect progress along the *line* (stop counting),
+   not just "within X metres", which fails in tunnels with patchy GPS.
+2. **Wired for metro (esp. Indian metros)** — official station/line data, offline.
+3. **Reliable native alarm** — full-screen looping audio + vibration that survives
+   Doze/battery-saver; most generic apps fail here.
+4. **Alarm N stops before destination** — the exact UX the existing apps do poorly.
+
 ## Tech stack (decided)
 
 - **React Native** (single codebase for Android + iOS)
