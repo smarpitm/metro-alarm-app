@@ -9,10 +9,11 @@ import {
   Text,
   View,
 } from 'react-native';
-import type { StyleProp, TextStyle, ViewStyle } from 'react-native';
+import type { TextStyle, ViewStyle } from 'react-native';
 import { blueLineNetwork, collectStations } from './src/metro/data';
 import type { Plan } from './src/metro/planner';
 import { planFastest, planLeastChanges } from './src/metro/planner';
+import { MetroAlarm } from './src/native/MetroAlarm';
 
 const fmtMin = (seconds: number) => `${Math.round(seconds / 60)} min`;
 
@@ -81,6 +82,18 @@ function App(): React.JSX.Element {
   );
   const [origin, setOrigin] = useState('dwarka-sector-21');
   const [dest, setDest] = useState('noida-electronic-city');
+  const [alarmRinging, setAlarmRinging] = useState(false);
+
+  const toggleTestAlarm = async () => {
+    if (alarmRinging) {
+      await MetroAlarm.stopAlarm();
+      setAlarmRinging(false);
+      return;
+    }
+    await MetroAlarm.requestNotificationPermission();
+    await MetroAlarm.startAlarm();
+    setAlarmRinging(true);
+  };
 
   const fastest = useMemo(
     () => (origin !== dest ? planFastest(blueLineNetwork, origin, dest) : null),
@@ -128,6 +141,14 @@ function App(): React.JSX.Element {
                 Both routes are the same — origin and destination share one line.
               </Text>
             ) : null}
+
+            <Pressable
+              style={alarmRinging ? styles.alarmStopBtn : styles.alarmTestBtn}
+              onPress={toggleTestAlarm}>
+              <Text style={styles.alarmBtnText}>
+                {alarmRinging ? '🔕 Stop alarm' : '🚨 Test alarm (D-006)'}
+              </Text>
+            </Pressable>
           </>
         )}
       </ScrollView>
@@ -164,6 +185,21 @@ const styles = StyleSheet.create({
   summary: { fontSize: 14, color: '#333', marginVertical: 6 } as TextStyle,
   leg: { fontSize: 14, color: '#555', marginTop: 2 } as TextStyle,
   note: { fontSize: 13, color: '#888', marginTop: 10 } as TextStyle,
+  alarmTestBtn: {
+    marginTop: 20,
+    padding: 14,
+    borderRadius: 8,
+    backgroundColor: '#d32f2f',
+    alignItems: 'center',
+  } as ViewStyle,
+  alarmStopBtn: {
+    marginTop: 20,
+    padding: 14,
+    borderRadius: 8,
+    backgroundColor: '#555',
+    alignItems: 'center',
+  } as ViewStyle,
+  alarmBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' } as TextStyle,
 });
 
 export default App;

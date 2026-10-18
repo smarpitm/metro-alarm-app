@@ -47,7 +47,12 @@ Newest entries at the top. Keep entries small and factual; avoid re-litigating.
 ---
 
 ## D-006 · Alarm must be native (AlarmManager + full-screen intent), decisions in JS
-**Date:** Oct 2026 · **Status:** agreed, to be implemented in scaffold's android/
+**Date:** Oct 2026 · **Status:** implemented (first cut) — AlarmService (looping alarm
+audio + vibration + full-screen-intent notification) + AlarmActivity (show-when-locked,
+turn-screen-on, explicit Dismiss) + MetroAlarmModule JS bridge (startAlarm/stopAlarm/isRinging).
+No exact scheduling yet — the alarm fires the moment JS decides; AlarmManager scheduling
+arrives with the ETA fallback (P4). Device verification pending: full-screen-intent grant
+(Android 14+), notification permission (13+), OEM battery managers.
 
 - **Decision:** The alarm path (exact alarm ringing, vibration, full-screen wake-up
   UI) is implemented as native Android code, not React Native JS timers.
