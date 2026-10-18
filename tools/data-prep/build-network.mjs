@@ -7,7 +7,7 @@
  * self-consistent source for order + coords. Wikipedia wikitext (cached) is
  * used only as a line-inventory cross-check.
  *
- * Output: src/metro/delhiNetwork.json (lines → segments → ordered stations)
+ * Output: src/metro/delhiNetwork.g.ts (lines → segments → ordered stations)
  * with inter-station times ESTIMATED from great-circle distance + dwell
  * (derived estimates; real median times come from recorded rides later).
  *

@@ -5,7 +5,7 @@
  * — replace with measured medians in Phase P0.
  */
 export default {
-  "generatedAt": "2026-10-18T13:45:37.724Z",
+  "generatedAt": "2026-10-18T14:08:21.665Z",
   "lines": [
     {
       "id": "blue",
