@@ -65,5 +65,6 @@ vendor/bundle/
 **/.xcode.env.local
 
 # local APKs & SDK config
+apk/
 *.apk
 android/local.properties
