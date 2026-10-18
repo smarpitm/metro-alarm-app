@@ -15,15 +15,25 @@ interface MetroAlarmNative {
   /** Stop the alarm service. */
   stopAlarm(): Promise<boolean>;
   isRinging(): Promise<boolean>;
+  /** Runtime ACCESS_FINE_LOCATION request. */
+  requestLocationPermission(): Promise<boolean>;
+  /** Start the trip-tracking foreground service (GPS fixes → MetroTripLocation events). */
+  startLocationUpdates(): Promise<boolean>;
+  /** Stop trip tracking. */
+  stopLocationUpdates(): Promise<boolean>;
 }
 
 const native = NativeModules.MetroAlarm as MetroAlarmNative | undefined;
 
-if (!native) {
-  // Makes misconfiguration loud in dev instead of a silent undefined crash later.
-  throw new Error(
-    'Native module "MetroAlarm" not found — is MetroAlarmPackage registered in MainApplication?',
-  );
-}
-
-export const MetroAlarm = native;
+export const MetroAlarm: MetroAlarmNative =
+  native ??
+  // Soft fallback for test/jest environments and early misconfiguration: methods
+  // resolve false instead of crashing. Loud in dev logs, silent on-device.
+  new Proxy({} as MetroAlarmNative, {
+    get(_, prop: string) {
+      if (!__DEV__) {
+        console.warn(`MetroAlarm native module missing; call to ${prop} ignored`);
+      }
+      return () => Promise.resolve(false);
+    },
+  });

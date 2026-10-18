@@ -13,6 +13,9 @@ export interface StationDef {
   name: string;
   /** travel time in seconds from THIS station to the next one (symmetric for v0) */
   toNextS?: number;
+  /** GPS anchor coordinates (present in the generated full-network pack) */
+  lat?: number;
+  lon?: number;
 }
 
 export interface SegmentDef {

@@ -1,0 +1,2201 @@
+{{Short description|None}}
+{{Use Indian English|date=July 2015}}
+{{Use dmy dates|date=January 2019}}
+{{GeoGroup|article=Category:Delhi Metro stations}}
+[[File:Rapid Transit Map of Delhi.jpg|thumb|450px|Delhi Metro Network map (as of February 2020)]]
+This is a list of all stations of the '''[[Delhi Metro]]''', a [[rapid transit]] system serving Delhi and its satellite cities in the [[National Capital Region (India)|National Capital Region]] of [[India]]. The network consists of [[Delhi Metro#Network|10 colour-coded lines]]<ref name="present network">{{Cite web |title=Present Network |url=https://www.delhimetrorail.com/pages/en/present-network |access-date=2022-04-16 |website=www.delhimetrorail.com}}</ref> serving '''271 stations'''{{efn|name=fn1|Transfer stations are counted more than once. There are 27 transfer stations. If transfer stations are counted only once, the result will be 244 stations. [[Ashok Park Main metro station|Ashok Park Main]] station, where the two diverging branches of [[Green Line (Delhi Metro)|Green Line]] share tracks/platforms, is anyway counted as a single station. Also [[Maujpur - Babarpur metro station|Maujpur - Babarpur]] station, where the two branches of [[Pink Line (Delhi Metro)|Pink Line]] share tracks/platforms, is anyway counted as a single station which is also a Terminus for the branch line. Stations of [[Aqua Line (Noida Metro)|Noida Metro]] and [[Rapid Metro Gurgaon|Gurgaon Metro]] are not counted. If stations of [[Aqua Line (Noida Metro)|Noida Metro]] and [[Rapid Metro Gurgaon|Gurgaon Metro]] are counted, the result will be 303 stations.<ref name="route map">{{Cite web |title=Route map |url=https://www.delhimetrorail.com/pages/en/network_map |access-date=2022-04-16 |website=www.delhimetrorail.com}}</ref><ref name="present network"/><ref name="introduction">{{Cite web |title=Introduction {{!}} DMRC Karawal Nagar|url=https://www.delhimetrorail.com/pages/en/introduction |access-date=2022-04-16 |website=www.delhimetrorail.com}}</ref>}} with a total length of {{convert|374.47|km|abbr=}}.{{efn|name=fn2|The total length of Delhi Metro is {{convert|374.47|km}}. The operations & maintenance of [[Rapid Metro Gurgaon|Gurgaon Metro]] and [[Noida Metro]] is currently undertaken by [[Delhi Metro Rail Corporation|DMRC]], so the total length operated by DMRC is {{convert|416.49|km}}.<ref name="route map"/><ref name="introduction"/>}} Delhi Metro is built and operated by the [[Delhi Metro Rail Corporation Limited]] (DMRC) and the first section was opened on 25 December 2002 on the [[Red Line (Delhi Metro)|Red Line]].<ref name="red1.1">{{cite news|title=Indian PM launches Delhi metro|url=https://news.bbc.co.uk/2/hi/south_asia/2602907.stm|publisher=[[BBC News]]|date=24 December 2002|access-date=7 May 2010}}</ref>
+
+[[Sikanderpur metro station|Sikanderpur]] station offers an interchange with [[Rapid Metro Gurgaon|Gurgaon Metro]] via a 90&nbsp;m × 9&nbsp;m walkway.<ref>{{cite web|url=http://rapidmetrorail.com/welcome.html |access-date=1 December 2011 |url-status=dead |archive-url=https://web.archive.org/web/20111015005136/http://rapidmetrorail.com/welcome.html |title=Rapid Rail Metro Introduction|archive-date=15 October 2011 }}</ref> 
+
+[[Noida Sector 52 metro station|Noida Sector 52]] station offers an interchange with [[Noida Metro]].
+
+Each line of the Delhi Metro is identified by a specific colour. The system uses rolling stocks of both [[broad gauge]] and [[standard gauge]] trains, and has a combination of elevated, underground and at-grade lines. The Metro is open from about 05:00 to 00:00, with trains operating at a peak frequency of 2–3 minutes, and has an average daily count of 2,760,000 commuters.<ref name="hindustantimes">{{Cite news|url=http://timesofindia.indiatimes.com/city/delhi/Delhi-Metro-to-reserve-coach-for-women-from-October-2/articleshow/6629919.cms|title=Delhi Metro to reserve coach for women from October 2|work=[[The Times of India]]|date=26 September 2010|access-date=27 September 2010}}</ref>
+
+==Statistics==
+{| class="wikitable"
+|-
+!Layout
+!Stations
+|-
+|Elevated stations
+|align="center"|193
+|-
+|Underground stations
+|align="center"|71
+|-
+|At-grade stations
+|align="center"|7
+|-
+!Total
+!271*
+|}
+'''*''' Transfer stations are counted more than once. There are '''27 transfer stations''': 26 transfer stations serving 2 lines and 1 transfer station serving 3 lines. If transfer stations are counted only once, the result will be 243 stations.
+
+* Metro stations under construction: '''69'''
+* Metro stations planned/ proposed: '''77'''
+
+==Metro stations==
+
+{| class="wikitable" style="text-align: left;" style=font-size:95%; width="30%" 
+|-
+|style="background-color:#AFEEEE"|†
+|Terminal station
+|-
+|style="background-color:#FFFF99"|*
+|Transfer station
+|-
+|style="background-color:#FFB6C1"|†*
+|Terminal and transfer station to other lines
+|-
+|style="background-color:#F5DEB3"|††
+|Transfer station to [[Indian Railways]] / [[Inter State Bus Terminals|ISBT]]
+|-
+|style="background-color:#96CDCD"|**
+|Transfer station to other lines and [[Indian Railways]] / ISBT
+|-
+|style="background-color:#F0E68C"|#*
+|Terminal and transfer station to [[Indian Railways]] / ISBT
+|-
+|style="background-color:#DDFFDD"|†¤
+|Terminal, transfer station to other lines and [[Indian Railways]] / ISBT
+|}
+{{self reference|This list is sortable. Click on the [[File:Sort both.gif]] icon in the column header to change sort key and sort order.}}
+
+{{Static row numbers}}
+{| class="wikitable sortable static-row-numbers static-row-header-hash" style="text-align: left;" style=font-size:95%; width="100%"
+|-
+! width="28%" |Station name 
+! width="12%" |Line
+! width="12%" |Opened
+! width="9%" |Station layout<ref>{{Cite web |date=2022-07-22 |title=Delhi Metro: Map, routes, fares, train timings and more |url=https://indianexpress.com/article/cities/delhi/delhi-metro-map-route-fares-timings-information-8041217/ |access-date=2022-09-21 |website=The Indian Express |language=en}}</ref>
+! width="5%" |Platform layout
+! width="24%" |Notes
+! width="5%" |Refs
+|-
+| align="center" |{{stl|Delhi Metro|Adarsh Nagar}} 
+| align="center" |{{rcb|Delhi Metro|Yellow|croute}}
+| align="center" |4 February 2009
+| align="center" |Elevated
+| align="center" |Side
+| align="center" |–
+|
+|-
+| align="center" |{{stl|Delhi Metro|AIIMS}}
+| align="center" |{{rcb|Delhi Metro|Yellow|croute}}
+| align="center" |3 September 2010
+| align="center" |Underground
+| align="center" |Island
+| align="center" |–
+|<ref name="delhi">{{cite news|url=http://www.thehindu.com/news/cities/Delhi/article611319.ece|archive-url=https://web.archive.org/web/20100905002221/http://www.thehindu.com/news/cities/Delhi/article611319.ece|url-status=dead|archive-date=5 September 2010|title=Metro to bridge Delhi-Gurgaon divide today|work=[[The Hindu]]|date=3 September 2010|access-date=3 September 2010}}</ref><ref name="delhi1">{{cite news|url=https://timesofindia.indiatimes.com/city/delhi/S-Delhis-wait-for-Metro-ends/articleshow/6482742.cms|archive-url=https://web.archive.org/web/20121103083010/http://articles.timesofindia.indiatimes.com/2010-09-03/delhi/28259207_1_central-secretariat-qutub-minar-metro-stations|url-status=live|archive-date=3 November 2012|title=S Delhi's wait for Metro ends|author=Megha Suri Singh|work=[[The Times of India]]|date=3 September 2010|access-date=3 September 2010}}</ref>
+|-
+| align="center" |{{stl|Delhi Metro|Akshardham}}
+| align="center" |{{rcb|Delhi Metro|Blue|croute}}
+| align="center" |12 November 2009
+| align="center" |Elevated
+| align="center" |Side
+| align="center" |–
+|
+|-
+| rowspan="2" align="center" style="background-color:#96CDCD" |{{stl|Delhi Metro|Anand Vihar}}**
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+| align="center" |6 January 2010
+| align="center" |Elevated
+| align="center" |Side
+| rowspan="2" align="center" |Transfer station for '''[[Anand Vihar Railway Terminal]]''' ([[Indian Railways]]), '''[[Swami Vivekanand Inter State Bus Terminus|Anand Vihar ISBT]]''' and '''[[Anand Vihar RRTS station]]'''|| rowspan="2" |<ref name="inauguration" /><ref name="Kaushambi">{{cite news|url=http://www.delhimetrorail.com/press_reldetails.aspx?id=DprWmA5jpT0lld|title=Anand Vihar – Vaishali Section of the Delhi Metro Inaugurated Today|publisher=DMRC : Press Releases|date=14 June 2011|access-date=26 October 2011}}</ref>
+|-
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|31 October 2018
+|align="center"|Elevated
+|align="center"|Side
+|-
+| align="center" |{{stl|Delhi Metro|Arjan Garh}}
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|21 June 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+|align="center"|{{stl|Delhi Metro|Arthala}}
+|align="center"|{{rcb|Delhi Metro|Red|croute}}
+|align="center"|8 March 2019
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" style="background-color:#FFFF99" |{{stl|Delhi Metro|Ashok Park Main}}*
+|align="center"|{{rcb|Delhi Metro|Green|croute}}
+|align="center"|2 April 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Transfer for '''Branch Line'''
+|<ref name="new10">{{cite web|title=Metro's Green Line opened|url=http://www.thehindu.com/news/cities/Delhi/article373532.ece|archive-url=https://web.archive.org/web/20121019165223/http://www.thehindu.com/news/cities/Delhi/article373532.ece|url-status=dead|archive-date=19 October 2012|work=[[The Hindu]] |date=2 April 2010 }}</ref>
+|-
+| align="center" |{{stl|Delhi Metro|Ashram}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|31 December 2018
+|align="center"|Underground
+|align="center"|Island
+|align="center"|–
+|
+|-
+| rowspan="2" align="center" style="background-color:#FFFF99" |{{stl|Delhi Metro|Azadpur}}*
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|4 February 2009
+|align="center"|Elevated
+|align="center"|Side
+| rowspan="2" align="center"|–
+| rowspan="2" |
+|-
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|14 March 2018
+|align="center"|Underground
+|align="center"|Island
+|-
+| align="center" |{{stl|Delhi Metro|Badarpur Border}}
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|14 January 2011
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Formerly known as '''Badarpur'''
+|<ref name="Badarpur1">{{Cite news|url=http://delhimetrorail.com/whatnew_details.aspx?id=6z5BQDhE2cIlld&rdct=d|title=Sarita Vihar – Badarpur Section Opened for the Public on 14 Jan, 2011.|work=What's New ?|publisher=DMRC|date=14 January 2011|access-date=14 January 2011}}</ref><ref name="Badarpur2">{{Cite news|url=http://www.thehindu.com/news/cities/Delhi/article1092318.ece|archive-url=https://web.archive.org/web/20110116024243/http://www.thehindu.com/news/cities/Delhi/article1092318.ece|url-status=dead|archive-date=16 January 2011|title=DMRC opens Sarita Vihar-Badarpur section|work=[[The Hindu]]|date=14 January 2011|access-date=14 January 2011}}</ref><br><ref name="Badarpur3">{{Cite news|url=https://timesofindia.indiatimes.com/city/delhi/Metro-finally-at-Badarpur-/articleshow/7281053.cms|archive-url=https://web.archive.org/web/20121104110908/http://articles.timesofindia.indiatimes.com/2011-01-14/delhi/28373328_1_mohan-estate-central-secretariat-badarpur-dmrc|url-status=live|archive-date=4 November 2012|title=Metro finally at Badarpur|work=[[The Times of India]]|date=14 January 2011|access-date=14 January 2011}}</ref><ref name="Badarpur4">{{Cite news|url=http://www.indianexpress.com/news/Badarpur-to-be-linked-to-Metro-network-today/737122/|title=Badarpur to be linked to Metro network today|work=[[The Indian Express]]|date=14 January 2011|access-date=14 January 2011}}</ref><br><ref name="Badarpur5">{{Cite news|url=http://www.hindustantimes.com/DMRC-opens-Sarita-Vihar-Badarpur-section/H1-Article1-650172.aspx|archive-url=https://web.archive.org/web/20110117025548/http://www.hindustantimes.com/DMRC-opens-Sarita-Vihar-Badarpur-section/H1-Article1-650172.aspx|url-status=dead|archive-date=17 January 2011|title=DMRC opens Sarita Vihar–Badarpur section|work=[[Hindustan Times]]|date=14 January 2011|access-date=14 January 2011}}</ref>
+|-
+| align="center" |{{stl|Delhi Metro|Badkhal Mor}}
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|6 September 2015
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Bahadurgarh City}}
+|align="center"|{{rcb|Delhi Metro|Green|croute}}
+|align="center"|24 June 2018
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Formerly known as '''Bus Stand'''
+|
+|-
+|align="center" style="background-color:#F5DEB3"|{{stl|Delhi Metro|Barakhamba Road}}††
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|30 December 2005
+|align="center"|Underground
+|align="center"|Side
+|align="center"|Transfer station for [[Shivaji Bridge railway station|'''Shivaji Bridge Railway Station''']]
+|<ref name="End1">{{cite news|url=http://articles.timesofindia.indiatimes.com/2005-12-30/india/27855350_1_inaugurates-delhi-metro-metro-network|archive-url=https://web.archive.org/web/20110811060556/http://articles.timesofindia.indiatimes.com/2005-12-30/india/27855350_1_inaugurates-delhi-metro-metro-network|url-status=dead|archive-date=11 August 2011|title=PM inaugurates Barakhamba-Dwarka Metro line|work=[[The Times of India]]|date=30 December 2005|access-date=18 April 2010}}</ref>
+|-
+| align="center" |{{stl|Delhi Metro|Bata Chowk}}
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|6 September 2015
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Bhajanpura}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|8 March 2026
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="Hindustan Times-2026"/>
+|-
+| align="center" |{{stl|Delhi Metro|Bhalaswa}}
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|8 March 2026
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="Hindustan Times-2026">{{Cite web |date=2026-03-08 |title=PM Modi inaugurates two new Delhi Metro corridors: Key details of Pink and Magenta line extension |url=https://www.hindustantimes.com/cities/delhi-news/pm-modi-new-delhi-metro-corridors-key-details-pink-and-magenta-line-extension-routes-majlis-park-deepali-chowk-101772949619664-amp.html |access-date=2026-03-08 |website=Hindustan Times |language=en}}</ref>
+|-
+| align="center" |{{stl|Delhi Metro|Bhikaji Cama Place}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|6 August 2018
+|align="center"|Underground
+|align="center"|Island
+|align="center"|–
+|
+|-
+| rowspan="2" align="center" style="background-color:#FFB6C1" |{{stl|Delhi Metro|Botanical Garden}}†* 
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|12 November 2009
+|align="center"|Elevated
+|align="center"|Side
+| rowspan="2" align="center"|–
+| rowspan="2" |
+|-
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|25 December 2017
+|align="center"|Elevated
+|align="center"|Side
+|-
+| align="center" style="background-color:#AFEEEE" |{{stl|Delhi Metro|Brigadier Hoshiyar Singh}}†
+|align="center"|{{rcb|Delhi Metro|Green|croute}}
+|align="center"|24 June 2018
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Formerly known as '''City Park'''
+|
+|-
+| align="center" |{{stl|Delhi Metro|Burari}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|8 March 2026
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="Hindustan Times-2026"/>
+|-
+| rowspan="2" align="center" style="background-color:#FFFF99" |{{stl|Delhi Metro|Central Secretariat}}*
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|3 July 2005
+|align="center"|Underground
+|align="center"|Side
+| rowspan="2" align="center"|–
+| rowspan="2" |<ref name="underground1">{{Cite news|url=http://www.hindu.com/2005/07/03/stories/2005070311050100.htm|archive-url=https://web.archive.org/web/20070707161146/http://www.hindu.com/2005/07/03/stories/2005070311050100.htm|url-status=dead|archive-date=7 July 2007|title=New Delhi gets its brand new Metro|work=[[The Hindu]]|date=3 July 2005|access-date=30 October 2010|location=Chennai, India}}</ref><ref name="underground2">{{Cite news|url=http://articles.timesofindia.indiatimes.com/2005-07-02/india/27864536_1_delhi-metro-central-secretariat-traffic-jams|archive-url=https://web.archive.org/web/20121103135439/http://articles.timesofindia.indiatimes.com/2005-07-02/india/27864536_1_delhi-metro-central-secretariat-traffic-jams|url-status=dead|archive-date=3 November 2012|title=Delhi Metro goes underground|work=[[The Times of India]]|date=3 July 2005|access-date=30 October 2010}}</ref><br><ref name="Kalkaji">{{Cite news|url=http://www.indianexpress.com/news/metro-to-jln-stadium-from-sunday/691580|title=Metro to JLN Stadium from Sunday|work=[[The Indian Express]]|date=2 October 2010|access-date=3 October 2010}}</ref><ref name="DNA">{{Cite news|url=http://www.dnaindia.com/india/report_delhi-metro-to-jln-stadium-rolls-out-phase-ii-almost-complete_1446853|title=Delhi metro to JLN Stadium rolls out, Phase-II almost complete|work=[[Daily News and Analysis]]|date=3 October 2010|access-date=3 October 2010}}</ref><br><ref name="newviolet">{{Cite news|url=http://www.thehindu.com/news/cities/Delhi/article850817.ece|archive-url=https://web.archive.org/web/20101031081443/http://www.thehindu.com/news/cities/Delhi/article850817.ece|url-status=dead|archive-date=31 October 2010|title=Trial runs start on Sarita Vihar- Badarpur Metro section|work=[[The Hindu]]|date=26 October 2010|access-date=30 October 2010}}</ref><ref name="newviolet1">{{Cite news|url=https://timesofindia.indiatimes.com/city/delhi/Trial-run-starts-between-Badarpur-Sarita-Vihar/articleshow/6818021.cms|archive-url=https://web.archive.org/web/20121103193928/http://articles.timesofindia.indiatimes.com/2010-10-27/delhi/28242802_1_tughlakabad-and-badarpur-mohan-estate-sarita-vihar-badarpur|url-status=live|archive-date=3 November 2012|title=Trial run starts between Badarpur & Sarita Vihar|work=[[The Times of India]]|date=27 October 2010|access-date=30 October 2010}}</ref>
+|-
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|3 October 2010
+|align="center"|Underground
+|align="center"|Side
+|-
+|align="center" style="background-color:#F5DEB3" |{{stl|Delhi Metro|Chandni Chowk}}††
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|3 July 2005
+|align="center"|Underground
+|align="center"|Island
+|align="center"|Formerly known as '''Delhi Main'''. Transfer station for '''[[Delhi Junction Railway station]].'''
+|<ref name="underground1" /><ref name="underground2" />
+|-
+| align="center" |{{stl|Delhi Metro|Chawri Bazar}}
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|3 July 2005
+|align="center"|Underground
+|align="center"|Island
+|align="center"|Second Deepest Metro Station of Delhi
+|<ref name="underground1" /><ref name="underground2" />
+|-
+| align="center" |{{stl|Delhi Metro|Chhatarpur}}
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|26 August 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="temple">{{cite news|url=https://timesofindia.indiatimes.com/city/delhi/Chattarpur-station-to-open-today/articleshow/6435360.cms|archive-url=https://web.archive.org/web/20121103054816/http://articles.timesofindia.indiatimes.com/2010-08-26/delhi/28316715_1_metro-station-cmrs-metro-rail-safety|url-status=live|archive-date=3 November 2012|title=Chattarpur station to open today|work=[[The Times of India]]|date=26 August 2010|access-date=26 August 2010}}</ref><ref name="temple1">{{cite news|url=http://www.dnaindia.com/india/report_higher-metro-ridership-last-week-as-delhi-gets-heavy-rains_1429041|title=Higher Metro ridership last week as Delhi gets heavy rains|work=Daily News and Analysis|date=26 August 2010|access-date=26 August 2010}}</ref>
+|-
+| align="center" |{{stl|Delhi Metro|Chirag Delhi}}
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|29 May 2018
+|align="center"|Underground
+|align="center"|Island
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Civil Lines}}
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|20 December 2004
+|align="center"|Underground
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Dabri Mor - Janakpuri South}}
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|29 May 2018
+|align="center"|Underground
+|align="center"|Island
+|align="center"|Formerly known as '''Dabri Mor'''
+|
+|-
+| align="center" |{{stl|Delhi Metro|Dashrathpuri}}
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|29 May 2018
+|align="center"|Underground
+|align="center"|Island
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Deepali Chowk}}
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|8 March 2026
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="Hindustan Times-2026"/>
+|-
+| align="center" |{{stl|Delhi Metro|Delhi Aerocity}}
+|align="center"|{{rcb|Delhi Metro|Airport Express|croute}}
+|align="center"|15 August 2011
+|align="center"|Underground
+|align="center"|Side
+|align="center"|Also known as [[National Highway 8 (India)|'''National Highway 8''']]
+|<ref name="airexpress1">{{cite news|url=https://www.thehindu.com/news/cities/Delhi/airport-metro-express-stations-opened-for-commuters/article2361269.ece|title=Airport Metro Express stations opened for commuters|work=[[The Hindu]]|date=16 August 2011|access-date=26 October 2011}}</ref>
+|-
+| align="center" |{{stl|Delhi Metro|Delhi Cantonment}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|14 March 2018
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Delhi Gate}}
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|28 May 2017
+|align="center"|Underground
+|align="center"|Island
+|align="center"|–
+|
+|-
+|align="center" style="background-color:#AFEEEE" |{{stl|Delhi Metro|Dhansa Bus Stand}}†
+|align="center"|{{rcb|Delhi Metro|Grey|croute}}
+|align="center"|18 September 2021
+|align="center"|Underground
+|align="center"|Side
+|align="center"|–
+|
+|-
+|align="center" style="background-color:#FFFF99"|{{stl|Delhi Metro|Dhaula Kuan}}*
+|align="center"|{{rcb|Delhi Metro|Airport Express|croute}}
+|align="center"|15 August 2011
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Transfer Station to '''[[Pink Line (Delhi Metro)|Pink Line]]''' 
+|<ref name="airexpress1" />
+|-
+| rowspan="2" align="center" style="background-color:#FFFF99" |{{stl|Delhi Metro|Dilli Haat - INA}}* 
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|3 September 2010
+|align="center"|Underground
+|align="center"|Island
+| rowspan="2" align="center"|Formerly known as '''INA'''
+| rowspan="2" |
+|-
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|6 August 2018
+|align="center"|Underground
+|align="center"|Island
+|-
+| align="center" |{{stl|Delhi Metro|Dilshad Garden}}
+|align="center"|{{rcb|Delhi Metro|Red|croute}}
+|align="center"|4 June 2008
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Dr. Baba Saheb Ambedkar Hospital}}
+| align="center" |{{rcb|Delhi Metro|Red|croute}}
+| align="center" |31 March 2004
+| align="center" |Elevated
+| align="center" |Side
+| align="center" |Formerly known as '''Rohini West'''
+|<ref name="red3" /><ref name="red3.1" /><br><ref name="red3.2" /><ref name=":0">{{Cite web |last=Verma |first=Anup |date=2026-05-28 |title=Metro stations, hospitals in Delhi given new names in heritage push |url=https://www.newindianexpress.com/states/delhi/2026/May/28/metro-stations-hospitals-in-delhi-given-new-names-in-heritage-push |access-date=2026-06-06 |website=The New Indian Express |language=en}}</ref>
+|-
+| align="center" style="background-color:#FFFF99" |{{stl|Delhi Metro|Durgabai Deshmukh South Campus}}*
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|14 March 2018
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|For '''Delhi University South Campus'''
+|
+|-
+| rowspan="2" align="center" style="background-color:#FFB6C1" |{{stl|Delhi Metro|Dwarka-Kakrola}}†*
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|30 December 2005
+|align="center"|Elevated
+|align="center"|Side
+|rowspan="2" align="center"|Formerly known as '''Dwarka'''
+|rowspan="2"|<ref name="End1" /><ref name=":0" />
+|-
+|align="center"|{{rcb|Delhi Metro|Grey|croute}}
+|align="center"|4 October 2019
+|align="center"|Elevated
+|align="center"|Side
+|-
+| align="center" |{{stl|Delhi Metro|Dwarka Mor}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|30 December 2005
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Mostly popular for [[Netaji Subhas University of Technology|NSUT]] and road to airport
+|<ref name="End1" />
+|-
+| align="center" |{{stl|Delhi Metro|Dwarka Sector 8}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|30 October 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="Dwarka21" /><ref name="Dwarka8" /><br><ref name="Dwarka8new" />
+|-
+| align="center" |{{stl|Delhi Metro|Dwarka Sector 9}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|1 April 2006
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Dwarka Sector 10}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|1 April 2006
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Dwarka Sector 11}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|1 April 2006
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Dwarka Sector 12}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|1 April 2006
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Dwarka Sector 13}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|1 April 2006
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Dwarka Sector 14}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|1 April 2006
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| rowspan="2" align="center" style="background-color:#FFB6C1" |{{stl|Delhi Metro|Dwarka Sector 21}}†*
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|30 October 2010
+|align="center"|Underground
+|align="center"|Side
+| rowspan="2" align="center"|–
+| rowspan="2" |<ref name="Dwarkasector21">{{cite news|url=http://www.hindustantimes.com/Soon-eat-shop-stay-at-Metro-station/Article1-619175.aspx|title=Soon, eat, shop, stay at Metro station|work=[[Hindustan Times]]|date=29 October 2010|access-date=30 October 2010|url-status=dead|archive-url=https://web.archive.org/web/20101101051253/http://www.hindustantimes.com/Soon-eat-shop-stay-at-Metro-station/Article1-619175.aspx|archive-date=1 November 2010}}</ref><ref name="Dwarka21">{{Cite news|url=http://www.delhimetrorail.com/press_reldetails.aspx?id=spzgQyC0reYlld|title=DMRC Extends Metro Services To Dwarka Sector 21 on Line-3|work=Press Releases|publisher=DMRC|date=30 October 2010|access-date=30 October 2010}}</ref><br><ref name="Dwarka8">{{Cite news|url=http://www.thehindu.com/news/cities/Delhi/article859532.ece|archive-url=https://web.archive.org/web/20101102195852/http://www.thehindu.com/news/cities/Delhi/article859532.ece|url-status=dead|archive-date=2 November 2010|title=Noida Metro line extended to Dwarka Sec-21|work=[[The Hindu]]|date=30 October 2010|access-date=30 October 2010}}</ref><ref name="Dwarka8new">{{Cite news|url=https://timesofindia.indiatimes.com/city/delhi/Metro-reaches-Dwarka-Sec-21/articleshow/6844065.cms|archive-url=https://web.archive.org/web/20121103194313/http://articles.timesofindia.indiatimes.com/2010-10-31/delhi/28269244_1_metro-train-metro-stations-dwarka-sec|url-status=live|archive-date=3 November 2012|title=Metro reaches Dwarka Sec 21|work=[[The Times of India]]|date=31 October 2010|access-date=31 October 2010}}</ref><br><ref name="Airport1">{{Cite news|url=http://www.delhimetrorail.com/whatnew_details.aspx?id=CLWZNiL81ncl4lld&rdct=d|title=The passenger operation on the Airport Express line starts on the 23rd of February, 2011.|work=What's New ?|publisher=DMRC|date=23 February 2011|access-date=23 February 2011}}</ref><ref name="Airport2">{{Cite news|url=http://www.thehindu.com/news/cities/Delhi/article1483311.ece|archive-url=https://web.archive.org/web/20110225120726/http://www.thehindu.com/news/cities/Delhi/article1483311.ece|url-status=dead|archive-date=25 February 2011|title=Airport Express Corridor opens; reach IGI in 18 minutes|work=[[The Hindu]]|date=23 February 2011|access-date=23 February 2011}}</ref><br><ref name="Airport3">{{Cite news|url=https://timesofindia.indiatimes.com/city/delhi/From-2pm-today-catch-a-Metro-to-Airport-/articleshow/7549752.cms|archive-url=https://archive.today/20130126222800/http://articles.timesofindia.indiatimes.com/2011-02-22/delhi/28625166_1_airport-metro-express-pvt-airport-link-helpline-service|url-status=live|archive-date=26 January 2013|title=From 2&nbsp;pm today, catch a Metro to Airport|first1=Rumu|last1=Banerjee|work=[[The Times of India]]|date=22 February 2011|access-date=23 February 2011}}</ref><ref name="Airport4">{{Cite news|url=http://www.indianexpress.com/news/starting-2-pm-today-airport-metro/753539/|title=Starting 2&nbsp;pm today, Airport Metro|work=[[The Indian Express]]|date=23 February 2011|access-date=23 February 2011}}</ref><br><ref name="Airport5">{{Cite news|url=http://www.hindustantimes.com/Rs-80-for-18-min-Metro-ride-from-N-Delhi-to-IGI-from-today/Article1-665626.aspx|archive-url=https://web.archive.org/web/20110225051537/http://www.hindustantimes.com/Rs-80-for-18-min-Metro-ride-from-N-Delhi-to-IGI-from-today/Article1-665626.aspx|url-status=dead|archive-date=25 February 2011|title=Rs 80 for 18-min Metro ride from N Delhi to IGI from today|work=[[Hindustan Times]]|date=23 February 2011|access-date=23 February 2011}}</ref><ref name="Airport6">{{Cite news|url=http://www.business-standard.com/india/news/delhi-metro/s-airport-express-line-opens-today/426238/|title=Delhi Metro's Airport Express Line opens today|work=[[Business Standard]]|date=23 February 2011|access-date=23 February 2011}}</ref>
+|-
+|align="center"|{{rcb|Delhi Metro|Airport Express|croute}}
+|align="center"|23 February 2011
+|align="center"|Underground
+|align="center"|Side
+|-
+| align="center" |{{stl|Delhi Metro|East Azad Nagar}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|31 October 2018
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|East Vinod Nagar - Mayur Vihar-II}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|31 October 2018
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Formerly known as '''East Vinod Nagar'''
+|
+|-
+| align="center" |{{stl|Delhi Metro|Escorts Mujesar}}
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|6 September 2015
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Formerly known as '''YMCA Chowk'''
+|
+|-
+| align="center" |{{stl|Delhi Metro|ESI - Basaidarapur}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|14 March 2018
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Formerly known as '''ESI Hospital'''
+|
+|-
+| align="center" |{{stl|Delhi Metro|Ghevra}}
+|align="center"|{{rcb|Delhi Metro|Green|croute}}
+|align="center"|24 June 2018
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Ghitorni}}
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|21 June 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Gokulpuri}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|31 October 2018
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Golf Course}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|12 November 2009
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Govindpuri}}
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|3 October 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="Kalkaji" /><ref name="DNA" /><br><ref name="newviolet" /><ref name="newviolet1" />
+|-
+| align="center" |{{stl|Delhi Metro|Greater Kailash}}
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|29 May 2018
+|align="center"|Underground
+|align="center"|Island
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Green Park}}
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|3 September 2010
+|align="center"|Underground
+|align="center"|Island
+|align="center"|–
+|<ref name="delhi" /><ref name="delhi1" />
+|-
+| align="center" |{{stl|Delhi Metro|Guru Tegh Bahadur Nagar}}
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|4 February 2009
+|align="center"|Underground
+|align="center"|Side
+|align="center"|Formerly known as '''GTB Nagar'''
+|
+|-
+| align="center" |{{stl|Delhi Metro|Guru Dronacharya}}
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|21 June 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Formerly known as '''Garden Estate'''
+|
+|-
+| rowspan="2" align="center" style="background-color:#FFFF99" |{{stl|Delhi Metro|Haiderpur Badli Mor}}*
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|10 November 2015
+|align="center"|Elevated
+|align="center"|Island
+|rowspan="2" align="center"|Formerly known as '''Badli Mor'''
+|rowspan="2"|<ref name="Hindustan Times-2026"/>
+|-
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|8 March 2026
+|align="center"|Elevated
+|align="center"|Island
+|-
+| align="center" |{{stl|Delhi Metro|Haiderpur Village}}
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|8 March 2026
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="Hindustan Times-2026"/>
+|-
+| align="center" |{{stl|Delhi Metro|Harkesh Nagar Okhla}}
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|3 October 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Formerly known as '''Okhla'''
+|<ref name="Kalkaji" /><ref name="DNA" /><br><ref name="newviolet" /><ref name="newviolet1" />
+|-
+| rowspan="2" align="center" style="background-color:#FFFF99" |{{stl|Delhi Metro|Hauz Khas}}* 
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|3 September 2010
+|align="center"|Underground
+|align="center"|Island
+| rowspan="2" align="center"|Deepest Metro Station in Delhi
+| rowspan="2" |<ref name="delhi" /><ref name="delhi1" />
+|-
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|29 May 2018
+|align="center"|Underground
+|align="center"|Island
+|-
+| align="center" |{{stl|Delhi Metro|Hindon River}}
+|align="center"|{{rcb|Delhi Metro|Red|croute}}
+|align="center"|8 March 2019
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|IFFCO Chowk}}
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|21 June 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|IIT}}
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|29 May 2018
+|align="center"|Underground
+|align="center"|Island
+|align="center"|For IIT Delhi
+|
+|-
+| rowspan="2" align="center" style="background-color:#FFB6C1" |{{stl|Delhi Metro|Inderlok}}†*
+|align="center"|{{rcb|Delhi Metro|Red|croute}}
+|align="center"|3 October 2003
+|align="center"|Elevated
+|align="center"|Side
+|rowspan="2" align="center"|Formerly known as '''Trinagar'''
+| rowspan="2" align="center"|<ref name="red2">{{cite news|url=http://www.financialexpress.com/news/second-section-of-metro-on-rails/94286/0|title=Second Section of Metro on Rails|work=[[The Financial Express (India)|The Financial Express]]|date=4 October 2003|access-date=7 May 2010}}</ref><ref name="red2.1">{{cite news|url=https://timesofindia.indiatimes.com/city/delhi/Trinagar-Tis-Hazari-Metro-set-rolling/articleshow/215417.cms|archive-url=https://web.archive.org/web/20110811072137/http://articles.timesofindia.indiatimes.com/2003-10-04/delhi/27194886_1_delhi-metro-automatic-train-protection-dmrc|url-status=live|archive-date=11 August 2011|title=Trinagar-Tis Hazari Metro set rolling|work=[[The Times of India]]|date=4 October 2003|access-date=7 May 2010}}</ref><br><ref name="names">{{cite news|url=https://timesofindia.indiatimes.com/city/delhi/Metro-Rail-suffers-from-identity-crisis/articleshow/590303.cms|archive-url=https://web.archive.org/web/20110811072147/http://articles.timesofindia.indiatimes.com/2004-03-30/delhi/28339652_1_metro-station-dmrc-trinagar|url-status=live|archive-date=11 August 2011|title=Metro Rail suffers from identity crisis|work=[[The Times of India]]|date=30 March 2004|access-date=7 May 2010|first1=Nidhi|last1=Sharma}}</ref>
+|-
+|align="center"|{{rcb|Delhi Metro|Green|croute}}
+|align="center"|2 April 2010
+|align="center"|Elevated
+|align="center"|Island
+|-
+| align="center" |[[IGI Airport metro station|Indira Gandhi International Airport]]
+|align="center"|{{rcb|Delhi Metro|Airport Express|croute}}
+|align="center"|23 February 2011
+|align="center"|Underground
+|align="center"|Island
+|align="center"|For '''[[Indira Gandhi International Airport]]'s Terminal 2 & 3'''
+|<ref name="Airport1" /><ref name="Airport2" /><br><ref name="Airport3" /><ref name="Airport4" /><br><ref name="Airport5" /><ref name="Airport6" />
+|-
+| align="center" |{{stl|Delhi Metro|Indraprastha}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|11 November 2006
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|IP Extension}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|31 October 2018
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|ITO}}
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|8 June 2015
+|align="center"|Underground
+|align="center"|Island
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Jaffrabad}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|31 October 2018
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Jagatpur - Wazirabad}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|8 March 2026
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="Hindustan Times-2026"/>
+|-
+| align="center" |{{stl|Delhi Metro|Jahangirpuri}}
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|4 February 2009
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Jama Masjid}}
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|28 May 2017
+|align="center"|Underground
+|align="center"|Island
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Jamia Millia Islamia}}
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|25 December 2017
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Janakpuri East}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|30 December 2005
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="End1" />
+|-
+| rowspan="2" align="center" style="background-color:#FFFF99" |{{stl|Delhi Metro|Janakpuri West}}*
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|30 December 2005
+|align="center"|Elevated
+|align="center"|Side
+| rowspan="2" align="center"|Has India's Tallest Escalator connecting the concourse to Magenta Line
+| rowspan="2" |<ref name="End1" />
+|-
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|29 May 2018
+|align="center"|Underground
+|align="center"|Island
+|-
+| align="center" |{{stl|Delhi Metro|Jangpura}}
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|3 October 2010
+|align="center"|Underground
+|align="center"|Island
+|align="center"|Formerly known as '''Lodi Colony'''
+|<ref name="Kalkaji" /><ref name="DNA" /><br><ref name="newviolet" /><ref name="newviolet1" />
+|-
+| align="center" |{{stl|Delhi Metro|Janpath}}
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|26 June 2014
+|align="center"|Underground
+|align="center"|Island
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Jasola Apollo}}
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|3 October 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Formerly known as '''Jasola'''
+|<ref name="Kalkaji" /><ref name="DNA" /><br><ref name="newviolet" />
+|-
+| align="center" |{{stl|Delhi Metro|Jasola Vihar Shaheen Bagh}}
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|25 December 2017
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Jawaharlal Nehru Stadium}}
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|3 October 2010
+|align="center"|Underground
+|align="center"|Island
+|align="center"|–
+|<ref name="Kalkaji" /><ref name="DNA" /><br><ref name="newviolet" /><ref name="newviolet1" />
+|-
+| align="center" |{{stl|Delhi Metro|Jhandewalan}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|30 December 2005
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="End1" />
+|-
+| align="center" |{{stl|Delhi Metro|Jharoda Majra}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|8 March 2026
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="Hindustan Times-2026"/>
+|-
+| align="center" |{{stl|Delhi Metro|Jhilmil}}
+|align="center"|{{rcb|Delhi Metro|Red|croute}}
+|align="center"|4 June 2008
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Johri Enclave}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|31 October 2018
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Jor Bagh}}
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|3 September 2010
+|align="center"|Underground
+|align="center"|Island
+|align="center"|–
+|<ref name="delhi" /><ref name="delhi1" />
+|-
+| align="center" |{{stl|Delhi Metro|Kailash Colony}}
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|3 October 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="Kalkaji" /><ref name="DNA" /><br><ref name="newviolet" /><ref name="newviolet1" />
+|-
+| align="center" |{{stl|Delhi Metro|Kalindi Kunj}}
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|25 December 2017
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| rowspan="2" align="center" style="background-color:#FFFF99" |{{stl|Delhi Metro|Kalkaji Mandir}}* 
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|3 October 2010
+|align="center"|Elevated
+|align="center"|Side
+| rowspan="2" align="center"|–
+| rowspan="2" |<ref name="Kalkaji" /><ref name="DNA" /><br><ref name="newviolet" /><ref name="newviolet1" />
+|-
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|25 December 2017
+|align="center"|Underground
+|align="center"|Side
+|-
+| align="center" |{{stl|Delhi Metro|Kanhaiya Nagar}}
+|align="center"|{{rcb|Delhi Metro|Red|croute}}
+|align="center"|31 March 2004
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="red3">{{cite news|url=https://timesofindia.indiatimes.com/city/delhi/Passengers-rue-metro-fare-hike/articleshow/593763.cms|archive-url=https://web.archive.org/web/20110811072157/http://articles.timesofindia.indiatimes.com/2004-04-01/delhi/28338927_1_fare-hike-rithala-dmrc|url-status=live|archive-date=11 August 2011|title=Passengers rue metro fare hike|work=[[The Times of India]]|date=1 April 2004|access-date=7 May 2010}}</ref><ref name="red3.1">{{cite news|url=http://timesofindia.indiatimes.com/city/delhi/trinagar-rithala-all-set-to-roll/articleshow/578580.cms|title=Trinagar-Rithala all set to roll|work=[[The Times of India]]|date=24 March 2004|access-date=7 May 2010}}</ref><br><ref name="red3.2">{{cite news|url=https://timesofindia.indiatimes.com/city/delhi/Trinagar-Rithala-Metro-rail-from-March-31/articleshow/587699.cms|archive-url=https://web.archive.org/web/20110811072205/http://articles.timesofindia.indiatimes.com/2004-03-29/delhi/28335993_1_fare-hike-delhi-metro-rail-corporation-rithala-line|url-status=live|archive-date=11 August 2011|title=Trinagar-Rithala Metro rail from March 31|work=[[The Times of India]]|date=29 March 2004|access-date=7 May 2010}}</ref>
+|-
+| rowspan="2" align="center" style="background-color:#FFFF99" |{{stl|Delhi Metro|Karkarduma}}* 
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|6 January 2010
+|align="center"|Elevated
+|align="center"|Side
+| rowspan="2" align="center"|–
+| rowspan="2" |<ref name="inauguration" />
+|-
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|31 October 2018
+|align="center"|Elevated
+|align="center"|Side
+|-
+| align="center" |{{stl|Delhi Metro|Karkarduma Court}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|31 October 2018
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Karol Bagh}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|30 December 2005
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="End1" />
+|-
+| rowspan="3" align="center" style="background-color:#DDFFDD" |{{stl|Delhi Metro|Kashmere Gate}}†¤
+|align="center"|{{rcb|Delhi Metro|Red|croute}}
+|align="center"|24 December 2002
+|align="center"|Elevated
+|align="center"|Side
+| rowspan="3" align="center" |Transfer station for '''[[Maharana Pratap Inter State Bus Terminus|Kashmere Gate ISBT]]'''
+India's only Metro Interchange with three lines.
+| rowspan="3" |<ref name="red1.1" /><ref name="red1">{{cite news|url=http://www.financialexpress.com/news/story/69809/|title=Vajpayee Inaugurates Delhiites' Ride into The Future in Dream Metro|work=[[The Financial Express (India)|The Financial Express]]|date=25 December 2002|access-date=7 May 2010}}</ref>
+|-
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|20 December 2004
+|align="center"|Underground
+|align="center"|Island
+|-
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|28 May 2017
+|align="center"|Underground
+|align="center"|Island
+|-
+| align="center" |{{stl|Delhi Metro|Kaushambi}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|14 July 2011
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="Kaushambi" />
+|-
+| align="center" |{{stl|Delhi Metro|Keshav Puram}}
+|align="center"|{{rcb|Delhi Metro|Red|croute}}
+|align="center"|31 March 2004
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="red3" /><ref name="red3.1" /><br><ref name="red3.2" />
+|-
+| align="center" |{{stl|Delhi Metro|Khajuri Khas}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|8 March 2026
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="Hindustan Times-2026"/>
+|-
+| align="center" |{{stl|Delhi Metro|Khan Market}}
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|3 October 2010
+|align="center"|Underground
+|align="center"|Island
+|align="center"|–
+|<ref name="Kalkaji" /><ref name="DNA" /><br><ref name="newviolet" /><ref name="newviolet1" />
+|-
+| rowspan="2" align="center" style="background-color:#FFB6C1" |{{stl|Delhi Metro|Kirti Nagar}}†*
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|30 December 2005
+|align="center"|Elevated
+|align="center"|Side
+| rowspan="2" align="center"|–
+| rowspan="2" |<ref name="End1" />
+|-
+|align="center"|{{rcb|Delhi Metro|Green|croute}}
+|align="center"|27 August 2011
+|align="center"|At-grade
+|align="center"|Side
+|-
+| align="center" |{{stl|Delhi Metro|Krishna Nagar}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|31 October 2018
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Kohat Enclave}}
+|align="center"|{{rcb|Delhi Metro|Red|croute}}
+|align="center"|31 March 2004
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="red3" /><ref name="red3.1" /><br><ref name="red3.2" />
+|-
+| align="center" |{{stl|Delhi Metro|Krishna Park Extension}}
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|5 January 2025
+|align="center"|Underground
+|align="center"|Island
+|align="center"|–
+|
+|-
+| rowspan="2" align="center" style="background-color:#FFFF99" |{{stl|Delhi Metro|Lajpat Nagar}}* 
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|3 October 2010
+|align="center"|Elevated
+|align="center"|Side
+| rowspan="2" align="center"|–
+| rowspan="2" |<ref name="Kalkaji" /><ref name="DNA" /><br><ref name="newviolet" /><ref name="newviolet1" />
+|-
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|6 August 2018
+|align="center"|Underground
+|align="center"|Island
+|-
+| align="center" |{{stl|Delhi Metro|Lal Qila}}
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|28 May 2017
+|align="center"|Underground
+|align="center"|Island
+|align="center"|Formerly known as '''Red Fort'''
+|
+|-
+| align="center" |{{stl|Delhi Metro|Laxmi Nagar}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|6 January 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="inauguration">{{cite news|url=http://www.hindustantimes.com/News-Feed/newdelhi/Anand-Vihar-Metro-line-flagged-off/Article1-494321.aspx |title=Anand Vihar Metro line flagged off |work=[[Hindustan Times]] |access-date=1 June 2009 |url-status=dead |archive-url=https://web.archive.org/web/20110606141837/http://www.hindustantimes.com/News-Feed/newdelhi/Anand-Vihar-Metro-line-flagged-off/Article1-494321.aspx |archive-date= 6 June 2011 }}</ref>
+|-
+| align="center" |{{stl|Delhi Metro|Lok Kalyan Marg}}
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|3 September 2010
+|align="center"|Underground
+|align="center"|Island
+|align="center"|Formerly known as '''Race Course'''
+|<ref name="delhi" /><ref name="delhi1" />
+|-
+| align="center" |{{stl|Delhi Metro|Madipur}}
+|align="center"|{{rcb|Delhi Metro|Green|croute}}
+|align="center"|2 April 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="new10" />
+|-
+| rowspan="2" align="center" style="background-color:#FFFF99" |{{stl|Delhi Metro|Madhuban Chowk}}*
+| align="center" |{{rcb|Delhi Metro|Red|croute}}
+| align="center" |31 March 2004
+| align="center" |Elevated
+| align="center" |Side
+| rowspan="2" align="center" |Formerly known as '''Pitampura'''
+|rowspan="2" |<ref name="red3" /><ref name="red3.1" /><ref name="red3.2" /><ref>{{Cite web |date=2025-11-17 |title=Which 3 Delhi metro stations will undergo name change? Pitampura is one of them |url=https://www.hindustantimes.com/cities/delhi-news/which-3-delhi-metro-stations-will-undergo-name-change-pitampura-is-one-of-them-101763376481466.html |access-date=2026-02-05 |website=Hindustan Times |language=en}}</ref><ref name="Hindustan Times-2026"/>
+|-
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|8 March 2026
+|align="center"|Elevated
+|align="center"|Side
+|-
+| align="center" |{{stl|Delhi Metro|Maharaja Surajmal Stadium}}
+|align="center"|{{rcb|Delhi Metro|Green|croute}}
+|align="center"|2 April 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Formerly known as '''Surajmal Stadium'''
+|<ref name="new10" />
+|-
+| rowspan="2" align="center" style="background-color:#FFB6C1" |{{stl|Delhi Metro|Majlis Park}}†*
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|14 March 2018
+|align="center"|Elevated
+|align="center"|Side
+|rowspan="2" align="center"|Formerly known as '''Mukundpur'''
+|rowspan="2"|<ref name="Hindustan Times-2026"/>
+|-
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|8 March 2026
+|align="center"|Elevated
+|align="center"|Island
+|-
+|align="center" |{{stl|Delhi Metro|Major Mohit Sharma Rajendra Nagar}}
+|align="center"|{{rcb|Delhi Metro|Red|croute}}
+|align="center"|8 March 2019
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Formerly known as '''Rajendra Nagar'''
+|
+|-
+| align="center" |{{stl|Delhi Metro|Malviya Nagar}}
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|3 September 2010
+|align="center"|Underground
+|align="center"|Island
+|align="center"|–
+|<ref name="delhi" /><ref name="delhi1" />
+|-
+| align="center" |{{stl|Delhi Metro|Mandawali - West Vinod Nagar}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|31 October 2018
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Formerly known as '''Vinod Nagar West'''
+|
+|-
+| rowspan="2" align="center" style="background-color:#FFFF99" |{{stl|Delhi Metro|Mandi House}}* 
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|11 November 2006
+|align="center"|Underground
+|align="center"|Side
+| rowspan="2" align="center"|–
+| rowspan="2" |
+|-
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|26 June 2014
+|align="center"|Underground
+|align="center"|Island
+|-
+| align="center" |{{stl|Delhi Metro|Mansarovar Park}}
+|align="center"|{{rcb|Delhi Metro|Red|croute}}
+|align="center"|4 June 2008
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" style="background-color:#FFB6C1" |{{stl|Delhi Metro|Maujpur - Babarpur}}†*
+| align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|31 October 2018
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Formerly known as '''Maujpur'''
+Also a terminus for Pink Line's Shiv Vihar branch.
+|<ref name="Hindustan Times-2026"/>
+|-
+| align="center" |{{stl|Delhi Metro|Mayapuri}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|14 March 2018
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| rowspan="2" align="center" style="background-color:#FFFF99" |{{stl|Delhi Metro|Mayur Vihar-I}}*
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|12 November 2009
+|align="center"|Elevated
+|align="center"|Island
+| rowspan="2" align="center"|–
+| rowspan="2" |
+|-
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|31 December 2018
+|align="center"|Elevated
+|align="center"|Side
+|-
+| align="center" |{{stl|Delhi Metro|Mayur Vihar Extension}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|12 November 2009
+|align="center"|Elevated
+|align="center"|Island
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Mewla Maharajpur}}
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|6 September 2015
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|MG Road}}
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|21 June 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" style="background-color:#AFEEEE" |{{stl|Delhi Metro|Millennium City Centre Gurugram}}†
+| align="center" |{{rcb|Delhi Metro|Yellow|croute}}
+| align="center" |21 June 2010
+| align="center" |Elevated
+| align="center" |Side
+| align="center" |Formerly known as '''HUDA City Centre'''
+|<ref>{{Cite web |date=2023-07-03 |title= HUDA City Centre renamed again! Now called ‘Millennium City Centre Gurugram’ |url=https://www.livemint.com/news/india/huda-city-centres-name-changed-twice-in-3-hours-it-is-now-millenium-city-centre-11688383913148.html |access-date=2026-03-17 |website=LiveMint |language=en}}</ref>
+|-
+| align="center" |{{stl|Delhi Metro|Model Town}}
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|4 February 2009
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Mohan Estate}}
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|14 January 2011
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="Badarpur1" /><ref name="Badarpur2" /><br><ref name="Badarpur3" /><ref name="Badarpur4" /><br><ref name="Badarpur5" />
+|-
+| align="center" |{{stl|Delhi Metro|Mohan Nagar}}
+|align="center"|{{rcb|Delhi Metro|Red|croute}}
+|align="center"|8 March 2019
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Moolchand}}
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|3 October 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="Kalkaji" /><ref name="DNA" /><br><ref name="newviolet" /><ref name="newviolet1" />
+|-
+| align="center" |{{stl|Delhi Metro|Moti Nagar}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|30 December 2005
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="End1" />
+|-
+| align="center" |{{stl|Delhi Metro|Mundka}}
+|align="center"|{{rcb|Delhi Metro|Green|croute}}
+|align="center"|2 April 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="new10" />
+|-
+| align="center" |{{stl|Delhi Metro|Mundka Industrial Area}}
+|align="center"|{{rcb|Delhi Metro|Green|croute}}
+|align="center"|24 June 2018
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Munirka}}
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|29 May 2018
+|align="center"|Underground
+|align="center"|Island
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Najafgarh}}
+| align="center" |{{rcb|Delhi Metro|Grey|croute}}
+| align="center" |4 October 2019
+| align="center" |Underground
+| align="center" |Side
+| align="center" |–
+|<ref>{{Cite web |date=2021-09-18 |title= Inauguration of Delhi Metro’s Grey Line (Najafgarh – Dhansa Bus Stand), supported by the Government of Japan |url=https://www.in.emb-japan.go.jp/itpr_en/11_000001_00321.html |access-date=2026-03-17 |website=Embassy of Japan in India |language=en}}</ref>
+|-
+| align="center" |{{stl|Delhi Metro|Nanaksar - Sonia Vihar}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|8 March 2026
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="Hindustan Times-2026"/>
+|-
+|align="center" |{{stl|Delhi Metro|Nangli}}
+|align="center"|{{rcb|Delhi Metro|Grey|croute}}
+|align="center"|4 October 2019
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Nangloi}}
+|align="center"|{{rcb|Delhi Metro|Green|croute}}
+|align="center"|2 April 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="new10" />
+|-
+| align="center" style="background-color:#F5DEB3" |{{stl|Delhi Metro|Nangloi Railway Station}}††
+|align="center"|{{rcb|Delhi Metro|Green|croute}}
+|align="center"|2 April 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Transfer station for '''[[Nangloi railway station]]''' ([[Indian Railways]])
+|<ref name="new10" />
+|-
+| align="center" |{{stl|Delhi Metro|Naraina Vihar}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|14 March 2018
+|align="center"|Underground
+|align="center"|Island
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Nawada}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|30 December 2005
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="End1" />
+|-
+| align="center" |{{stl|Delhi Metro|Neelam Chowk Ajronda}}
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|6 September 2015
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Formerly known as '''Ajronda'''
+|
+|-
+| align="center" |{{stl|Delhi Metro|Nehru Enclave}}
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|29 May 2018
+|align="center"|Underground
+|align="center"|Island
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Nehru Place}}
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|3 October 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="Kalkaji" /><ref name="DNA" /><br><ref name="newviolet" /><ref name="newviolet1" />
+|-
+| rowspan="2" align="center" style="background-color:#FFFF99" |{{stl|Delhi Metro|Netaji Subhash Place}}*
+|align="center"|{{rcb|Delhi Metro|Red|croute}}
+|align="center"|31 March 2004
+|align="center"|Elevated
+|align="center"|Side
+| rowspan="2" align="center" |Formerly known as '''Wazirpur'''
+| rowspan="2" |<ref name="names" /><ref name="red3" /><br><ref name="red3.1" /><ref name="red3.2" />
+|-
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|14 March 2018
+|align="center"|Underground
+|align="center"|Side
+|-
+| align="center" |{{stl|Delhi Metro|New Ashok Nagar}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|12 November 2009
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Transfer station for '''[[New Ashok Nagar RRTS station]]'''
+|
+|-
+| rowspan="2" align="center" style="background-color:#DDFFDD" |{{stl|Delhi Metro|New Delhi}}†¤
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|3 July 2005
+|align="center"|Underground
+|align="center"|Island
+| rowspan="2" align="center" |Transfer station for '''[[New Delhi Railway Station]]''' ([[Indian Railways]]) and [[Delhi Airport Metro Express|Airport Express]]
+| rowspan="2" |<ref name="underground1" /><ref name="underground2" /><br><ref name="Airport1" /><ref name="Airport2" /><br><ref name="Airport3" /><ref name="Airport4" /><br><ref name="Airport5" /><ref name="Airport6" />
+|-
+|align="center"|{{rcb|Delhi Metro|Airport Express|croute}}
+|align="center"|23 February 2011
+|align="center"|Underground
+|align="center"|Island
+|-
+| align="center" |{{stl|Delhi Metro|NHPC Chowk}}
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|6 September 2015
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Nirman Vihar}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|6 January 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="inauguration" />
+|-
+| align="center" |{{stl|Delhi Metro|Noida City Centre}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|12 November 2009
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" style="background-color:#AFEEEE" |{{stl|Delhi Metro|Noida Electronic City}}†
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|9 March 2019
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Noida Sector 15}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|12 November 2009
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Noida Sector 16}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|12 November 2009
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Noida Sector 18}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|12 November 2009
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Noida Sector 34}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|9 March 2019
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" style="background-color:#FFFF99" |{{stl|Delhi Metro|Noida Sector 52}}*
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|9 March 2019
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Transfer station for '''[[Aqua Line (Noida Metro)]]'''
+|
+|-
+| align="center" |{{stl|Delhi Metro|Noida Sector 59}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|9 March 2019
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Noida Sector 61}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|9 March 2019
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Noida Sector 62}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|9 March 2019
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Okhla Bird Sanctuary}}
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|25 December 2017
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Okhla NSIC}}
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|25 December 2017
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Okhla Vihar}}
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|25 December 2017
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Old Faridabad}}
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|6 September 2015
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Palam}}
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|29 May 2018
+|align="center"|Underground
+|align="center"|Island
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Panchsheel Park}}
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|29 May 2018
+|align="center"|Underground
+|align="center"|Island
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Pandit Shree Ram Sharma}}
+|align="center"|{{rcb|Delhi Metro|Green|croute}}
+|align="center"|24 June 2018
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Formerly known as '''Modern Industrial Estate'''
+|
+|-
+| align="center" |{{stl|Delhi Metro|Paschim Vihar East}}
+|align="center"|{{rcb|Delhi Metro|Green|croute}}
+|align="center"|2 April 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="new10" />
+|-
+| align="center" |{{stl|Delhi Metro|Paschim Vihar West}}
+|align="center"|{{rcb|Delhi Metro|Green|croute}}
+|align="center"|2 April 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="new10" />
+|-
+| align="center" |{{stl|Delhi Metro|Patel Chowk}}
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|3 July 2005
+|align="center"|Underground
+|align="center"|Island
+|align="center"|–
+|<ref name="underground1" /><ref name="underground2" />
+|-
+| align="center" |{{stl|Delhi Metro|Patel Nagar}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|30 December 2005
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="End1" />
+|-
+| align="center" |{{stl|Delhi Metro|Peeragarhi}}
+|align="center"|{{rcb|Delhi Metro|Green|croute}}
+|align="center"|2 April 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="new10" />
+|-
+| align="center" style="background-color:#F5DEB3" |{{stl|Delhi Metro|Pratap Nagar}}††
+|align="center"|{{rcb|Delhi Metro|Red|croute}}
+|align="center"|3 October 2003
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Transfer station for '''[[Subzi Mandi railway station]]''' ([[Indian Railways]])
+|<ref name="red2" /><ref name="red2.1" />
+|-
+| align="center" |{{stl|Delhi Metro|Preet Vihar}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|6 January 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="inauguration" />
+|-
+| align="center" |{{stl|Delhi Metro|Pulbangash}}
+|align="center"|{{rcb|Delhi Metro|Red|croute}}
+|align="center"|3 October 2003
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="red2" /><ref name="red2.1" />
+|-
+| align="center" |{{stl|Delhi Metro|Punjabi Bagh}}
+|align="center"|{{rcb|Delhi Metro|Green|croute}}
+|align="center"|2 April 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Formerly known as '''Punjabi Bagh East'''
+|<ref name="new10" />
+|-
+| rowspan="2" align="center" style="background-color:#FFFF99" |{{stl|Delhi Metro|Punjabi Bagh West}}* 
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|14 March 2018
+|align="center"|Elevated
+|align="center"|Side
+| rowspan="2" align="center"|–
+| rowspan="2" |
+|-
+|align="center"|{{rcb|Delhi Metro|Green|croute}}
+|align="center"|29 March 2022
+|align="center"|Elevated
+|align="center"|Side
+|-
+| align="center" |{{stl|Delhi Metro|Qutab Minar}}
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|21 June 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|R. K. Puram}}
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|29 May 2018
+|align="center"|Underground
+|align="center"|Island
+|align="center"|–
+|
+|-
+| align="center" style="background-color:#AFEEEE" |{{stl|Delhi Metro|Raja Nahar Singh (Ballabhgarh)}}†
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|19 November 2018
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Formerly known as '''Ballabhgarh''' 
+|
+|-
+| align="center" |{{stl|Delhi Metro|Raj Bagh}}
+|align="center"|{{rcb|Delhi Metro|Red|croute}}
+|align="center"|8 March 2019
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Rajdhani Park}}
+|align="center"|{{rcb|Delhi Metro|Green|croute}}
+|align="center"|2 April 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="new10" />
+|-
+| align="center" |{{stl|Delhi Metro|Rajendra Place}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|30 December 2005
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="End1" />
+|-
+| rowspan="2" align="center" style="background-color:#FFFF99" |{{stl|Delhi Metro|Rajiv Chowk}}*
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|3 July 2005
+|align="center"|Underground
+|align="center"|Island
+| rowspan="2" align="center" |–
+| rowspan="2" |<ref name="underground1" /><ref name="underground2" />
+|-
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|30 December 2005
+|align="center"|Underground
+|align="center"|Side
+|-
+| rowspan="2" align="center" style="background-color:#FFFF99" |{{stl|Delhi Metro|Rajouri Garden}}*
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|30 December 2005
+|align="center"|Elevated
+|align="center"|Side
+| rowspan="2" align="center"|–
+| rowspan="2" |<ref name="End1" />
+|-
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|14 March 2018
+|align="center"|Elevated
+|align="center"|Side
+|-
+| align="center" |{{stl|Delhi Metro|Ramakrishna Ashram Marg}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|30 December 2005
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="End1" />
+|-
+| align="center" |{{stl|Delhi Metro|Ramesh Nagar}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|30 December 2005
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="End1" />
+|-
+| align="center" style="background-color:#AFEEEE" |{{stl|Delhi Metro|Rithala}}†
+|align="center"|{{rcb|Delhi Metro|Red|croute}}
+|align="center"|31 March 2004
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="red3" /><ref name="red3.1" /><br><ref name="red3.2" />
+|-
+| align="center" |{{stl|Delhi Metro|Rohini}}
+|align="center"|{{rcb|Delhi Metro|Red|croute}}
+|align="center"|31 March 2004
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Formerly known as '''Rohini East'''
+|<ref name="red3" /><ref name="red3.1" /><br><ref name="red3.2" /><ref name=":0" />
+|-
+| align="center" |{{stl|Delhi Metro|Rohini Sector 18, 19}}
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|10 November 2015
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Sadar Bazar Cantonment}}
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|29 May 2018
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Saket}}
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|3 September 2010
+|align="center"|Underground
+|align="center"|Island
+|align="center"|–
+|<ref name="delhi" /><ref name="delhi1" />
+|-
+| align="center" style="background-color:#AFEEEE" |{{stl|Delhi Metro|Samaypur Badli}}†
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|10 November 2015
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Sant Surdas (Sihi)}}
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|19 November 2018
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Formerly known as '''NCB (Goodyear Chowk)'''
+|
+|-
+| align="center" |{{stl|Delhi Metro|Sarai}}
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|6 September 2015
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" style="background-color:#F5DEB3" |{{stl|Delhi Metro|Sarai Kale Khan – Nizamuddin}}††
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|31 December 2018
+|align="center"|Underground
+|align="center"|Island
+|align="center"|Transfer station for '''[[Hazrat Nizamuddin railway station]]''' ([[Indian Railways]]), '''[[Sarai Kale Khan Inter-State Bus Terminus|Sarai Kale Khan ISBT]]''' and '''[[Sarai Kale Khan RRTS station]]'''
+|
+|-
+| align="center" |{{stl|Delhi Metro|Sarita Vihar}}
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|3 October 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="Kalkaji" /><ref name="DNA" /><br><ref name="newviolet" /><ref name="newviolet1" />
+|-
+| align="center" |{{stl|Delhi Metro|Sarojini Nagar}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|6 August 2018
+|align="center"|Underground
+|align="center"|Island
+|align="center"|–
+|
+|-
+| align="center" style="background-color:#F5DEB3" |{{stl|Delhi Metro|Satguru Ram Singh Marg}}††
+|align="center"|{{rcb|Delhi Metro|Green|croute}}
+|align="center"|27 August 2011
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Transfer station for '''[[Patel Nagar railway station]]''' ([[Indian Railways]])
+|
+|-
+| align="center" |{{stl|Delhi Metro|Sector 28}}
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|6 September 2015
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Seelampur}}
+|align="center"|{{rcb|Delhi Metro|Red|croute}}
+|align="center"|24 December 2002
+|align="center"|At-grade
+|align="center"|Island
+|align="center"|–
+|<ref name="red1.1" /><ref name="red1" />
+|-
+| align="center" |{{stl|Delhi Metro|Seva Teerth}}
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|3 September 2010
+|align="center"|Underground
+|align="center"|Island
+|align="center"|Formerly known as '''Udyog Bhawan'''
+|<ref name="delhi" /><ref>{{Cite web |date=2026-02-14 |title=Udyog Bhawan metro station gets new name in Delhi: Details here |url=https://www.indiatoday.in/information/story/seva-teerth-bhawan-metro-station-renamed-from-udyog-bhawan-delhi-2868143-2026-02-14 |access-date=2026-03-23 |website=India Today |language=en}}</ref><ref name="delhi1" />
+|-
+| align="center" |{{stl|Delhi Metro|Shadipur}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|30 December 2005
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="End1" />
+|-
+|align="center" style="background-color:#F5DEB3"|{{stl|Delhi Metro|Shahdara}}††
+|align="center"|{{rcb|Delhi Metro|Red|croute}}
+|align="center"|24 December 2002
+|align="center"|At-grade
+|align="center"|Side
+|align="center"|Transfer station for '''[[Delhi Shahdara Junction railway station]]'''
+|<ref name="red1.1" /><ref name="red1" />
+|-
+| align="center" |{{stl|Delhi Metro|Shaheed Nagar}}
+|align="center"|{{rcb|Delhi Metro|Red|croute}}
+|align="center"|8 March 2019
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" style="background-color:#AFEEEE" |{{stl|Delhi Metro|Shaheed Sthal (New Bus Adda)}}
+|align="center"|{{rcb|Delhi Metro|Red|croute}}
+|align="center"|8 March 2019
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Formerly known as '''New Bus Adda'''
+|
+|-
+| align="center" |{{stl|Delhi Metro|Shakurpur}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|14 March 2018
+|align="center"|Elevated
+|align="center"|Island
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Shalimar Bagh}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|14 March 2018
+|align="center"|Underground
+|align="center"|Island
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Shankar Vihar}}
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|29 May 2018
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Only authorized defense personnel and their families are permitted to enter or exit at this station.
+|
+|-
+| align="center" style="background-color:#F5DEB3" |{{stl|Delhi Metro|Shastri Nagar}}††
+|align="center"|{{rcb|Delhi Metro|Red|croute}}
+|align="center"|3 October 2003
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Formerly known as '''Vivekanand Puri'''. Transfer station for '''[[Delhi Sarai Rohilla railway station]]''' ([[Indian Railways]])
+|<ref name="red2" /><ref name="red2.1" /><br><ref name="names" />
+|-
+| align="center" |{{stl|Delhi Metro|Shastri Park}}
+|align="center"|{{rcb|Delhi Metro|Red|croute}}
+|align="center"|24 December 2002
+|align="center"|At-grade
+|align="center"|Side
+|align="center"|–
+|<ref name="red1.1" /><ref name="red1" />
+|-
+| align="center" style="background-color:#AFEEEE" |{{stl|Delhi Metro|Shiv Vihar}}†
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|31 October 2018
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Shivaji Park}}
+|align="center"|{{rcb|Delhi Metro|Green|croute}}
+|align="center"|2 April 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="new10" />
+|-
+| align="center" |{{stl|Delhi Metro|Shivaji Stadium}}
+|align="center"|{{rcb|Delhi Metro|Airport Express|croute}}
+|align="center"|23 February 2011
+|align="center"|Underground
+|align="center"|Island
+|align="center"|–
+|<ref name="Airport1" /><ref name="Airport2" /><br><ref name="Airport3" /><ref name="Airport4" /><br><ref name="Airport5" /><ref name="Airport6" />
+|-
+| align="center" |{{stl|Delhi Metro|Shree Ram Mandir Mayur Vihar}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|31 December 2018
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Formerly known as '''Mayur Vihar Pocket I'''<ref>{{Cite news |date=2026-02-07 |title='Shree Ram Mandir Mayur Vihar': Mayur Vihar Pocket 1 metro station gets new name |url=https://timesofindia.indiatimes.com/city/delhi/shree-ram-mandir-mayur-vihar-metro-station-mayur-vihar-pocket-1-gets-new-name/articleshow/128035576.cms |access-date=2026-02-16 |work=The Times of India |issn=0971-8257}}</ref>
+|
+|-
+| align="center" |{{stl|Delhi Metro|Shyam Park}}
+|align="center"|{{rcb|Delhi Metro|Red|croute}}
+|align="center"|8 March 2019
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" style="background-color:#FFFF99" |{{stl|Delhi Metro|Sikanderpur}}*
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|21 June 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Transfer to '''[[Rapid Metro Gurgaon]]'''
+|
+|-
+| align="center" |{{stl|Delhi Metro|Sir M. Vishweshwaraiah Moti Bagh}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|6 August 2018
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|South Extension}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|6 August 2018
+|align="center"|Underground
+|align="center"|Island
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Subhash Nagar}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|30 December 2005
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="End1" />
+|-
+| align="center" |{{stl|Delhi Metro|Sukhdev Vihar}}
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|25 December 2017
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Sultanpur}}
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|21 June 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+|align="center" |{{stl|Delhi Metro|Supreme Court}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|11 November 2006
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Formerly known as '''Pragati Maidan'''
+The Delhi Metro Museum is stored inside of the station
+|<ref>{{Cite web |date=2025-12-18 |title=DMRC shifts Metro Museum to Supreme Court Metro Station, operational from Dec 19 |url=https://www.aninews.in/news/national/general-news/dmrc-shifts-metro-museum-to-supreme-court-metro-station-operational-from-dec-1920251218175115/ |access-date=2026-02-21 |website=ANI News |language=en}}</ref>
+|-
+| align="center" |{{stl|Delhi Metro|Tagore Garden}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|30 December 2005
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="End1" />
+|-
+| align="center" |{{stl|Delhi Metro|Terminal 1-IGI Airport}}
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|29 May 2018
+|align="center"|Underground
+|align="center"|Island
+|align="center"|Connects to Indira Gandhi International Airport's Terminal 1
+|
+|-
+| align="center" |{{stl|Delhi Metro|Tikri Border}}
+|align="center"|{{rcb|Delhi Metro|Green|croute}}
+|align="center"|24 June 2018
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Tikri Kalan}}
+|align="center"|{{rcb|Delhi Metro|Green|croute}}
+|align="center"|24 June 2018
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Tilak Nagar}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|30 December 2005
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="End1" />
+|-
+| align="center" |{{stl|Delhi Metro|Tis Hazari}}
+|align="center"|{{rcb|Delhi Metro|Red|croute}}
+|align="center"|24 December 2002
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="red1.1" /><ref name="red1" />
+|-
+| align="center" |{{stl|Delhi Metro|Trilokpuri - Sanjay Lake}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|31 October 2018
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Formerly known as '''Trilokpuri'''
+|
+|-
+| align="center" |{{stl|Delhi Metro|Tughlakabad Station}}
+|align="center"|{{rcb|Delhi Metro|Violet|croute}}
+|align="center"|14 January 2011
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|Formerly known as '''Tughlakabad'''
+|<ref name="Badarpur1" /><ref name="Badarpur2" /><br><ref name="Badarpur3" /><ref name="Badarpur4" /><br><ref name="Badarpur5" />
+|-
+| align="center" |{{stl|Delhi Metro|Udyog Nagar}}
+|align="center"|{{rcb|Delhi Metro|Green|croute}}
+|align="center"|2 April 2010
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="new10" />
+|-
+| align="center" |{{stl|Delhi Metro|Uttam Nagar East}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|30 December 2005
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="End1" />
+|-
+| align="center" |{{stl|Delhi Metro|Uttam Nagar West}}
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|30 December 2005
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="End1" />
+|-
+| align="center" |{{stl|Delhi Metro|Uttari Pitampura-Prashant Vihar}}
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|8 March 2026
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="Hindustan Times-2026"/>
+|-
+| align="center" style="background-color:#AFEEEE" |{{stl|Delhi Metro|Vaishali}}†
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|14 July 2011
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="Kaushambi" />
+|-
+| align="center" |{{stl|Delhi Metro|Vasant Vihar}}
+|align="center"|{{rcb|Delhi Metro|Magenta|croute}}
+|align="center"|29 May 2018
+|align="center"|Underground
+|align="center"|Island
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Vidhan Sabha}}
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|20 December 2004
+|align="center"|Underground
+|align="center"|Side
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Vinobapuri}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|31 December 2018
+|align="center"|Underground
+|align="center"|Island
+|align="center"|–
+|
+|-
+| align="center" |{{stl|Delhi Metro|Vishwavidyalaya}}
+|align="center"|{{rcb|Delhi Metro|Yellow|croute}}
+|align="center"|20 December 2004
+|align="center"|Underground
+|align="center"|Side
+|align="center"|–
+|
+|-
+| rowspan="2" align="center" style="background-color:#FFFF99" |{{stl|Delhi Metro|Welcome}}* 
+|align="center"|{{rcb|Delhi Metro|Red|croute}}
+|align="center"|24 December 2002
+|align="center"|At-grade
+|align="center"|Island
+| rowspan="2" align="center"|–
+| rowspan="2" |<ref name="red1.1" /><ref name="red1" />
+|-
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|31 October 2018
+|align="center"|Elevated
+|align="center"|Side
+|-
+| rowspan="2" align="center" style="background-color:#FFFF99" |{{stl|Delhi Metro|Yamuna Bank}}*
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|10 May 2009
+|align="center"|At-grade
+|align="center"|Island
+| rowspan="2" align="center"|–
+| rowspan="2" |
+|-
+|align="center"|{{rcb|Delhi Metro|Blue|croute}}
+|align="center"|6 January 2010
+|align="center"|At-grade
+|align="center"|Side
+|-
+| align="center" |{{stl|Delhi Metro|Yamuna Vihar}}
+|align="center"|{{rcb|Delhi Metro|Pink|croute}}
+|align="center"|8 March 2026
+|align="center"|Elevated
+|align="center"|Side
+|align="center"|–
+|<ref name="Hindustan Times-2026"/>
+|-
+| align="center" |{{stl|Delhi Metro|Yashobhoomi Dwarka Sector - 25}}
+|align="center"|{{rcb|Delhi Metro|Airport Express|croute}}
+|align="center"|17 September 2023
+|align="center"|Underground
+|align="center"|Side
+|align="center"|Formerly known as '''IICC - Dwarka Sector -25'''
+|
+|}
+
+==See also==
+{{div col|colwidth=22em}}
+*[[List of Ahmedabad Metro stations]]
+*[[List of Chennai Metro stations]]
+*[[List of Coimbatore Metro stations]]
+*[[List of Hyderabad Metro stations]]
+*[[List of Jaipur Metro stations]]
+*[[List of Kochi Metro stations]]
+*[[List of Kolkata Metro stations]]
+*[[List of Lucknow Metro stations]]
+*[[List of Madurai Metro stations]]
+*[[List of Mumbai Metro stations]]
+*[[List of Noida Metro stations]]
+*[[List of Nagpur Metro stations]]
+*[[List of Namma Metro stations]]
+*[[List of Navi Mumbai Metro Stations]]
+*[[List of Pune Metro stations]]
+*[[List of Surat Metro stations]]
+{{div col end}}
+{{Portal bar|Trains}}
+
+== Notes ==
+{{Notelist}}
+
+== References ==
+{{reflist}}
+
+==External links==
+{{Commons|Delhi Metro}}
+{{Wikivoyage|Delhi}}
+* [http://www.delhimetrorail.com Official website of Delhi Metro Rail Corporation Ltd. (DMRC)]
+* [https://railmetro.com/delhi Delhi Metro station information]
+
+{{Delhi}}
+{{Delhi Metro}}
+{{Delhi & NCR Metro stations|all=yes}}
+
+[[Category:Lists of metro stations in India|Delhi]]
+[[Category:Lists of buildings and structures in Delhi|Delhi Metro stations]]
+[[Category:Delhi Metro stations| ]]

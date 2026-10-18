@@ -18,8 +18,16 @@ import com.facebook.react.bridge.ReactMethod
 class MetroAlarmModule(private val reactContext: ReactApplicationContext) :
   ReactContextBaseJavaModule(reactContext) {
 
-  private companion object {
+  companion object {
     const val REQUEST_CODE = 4401
+
+    /** Used by LocationService to emit events; set when the module initializes. */
+    @JvmStatic
+    var appContext: ReactApplicationContext? = null
+  }
+
+  init {
+    appContext = reactContext
   }
 
   override fun getName(): String = "MetroAlarm"
@@ -64,5 +72,48 @@ class MetroAlarmModule(private val reactContext: ReactApplicationContext) :
   @ReactMethod
   fun isRinging(promise: Promise) {
     promise.resolve(AlarmService.isRinging)
+  }
+
+  /** Runtime location permission (ACCESS_FINE_LOCATION) — required before GPS. */
+  @ReactMethod
+  fun requestLocationPermission(promise: Promise) {
+    val activity = getCurrentActivity()
+    if (activity != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+      activity.requestPermissions(
+        arrayOf("android.permission.ACCESS_FINE_LOCATION"),
+        REQUEST_CODE + 1,
+      )
+    }
+    promise.resolve(activity != null)
+  }
+
+  /** Starts the trip-tracking foreground service (GPS fixes → MetroTripLocation). */
+  @ReactMethod
+  fun startLocationUpdates(promise: Promise) {
+    try {
+      val context = reactContext.applicationContext
+      val intent = Intent(context, LocationService::class.java)
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        context.startForegroundService(intent)
+      } else {
+        context.startService(intent)
+      }
+      promise.resolve(true)
+    } catch (e: Exception) {
+      promise.reject("LOCATION_START_FAILED", e.message, e)
+    }
+  }
+
+  @ReactMethod
+  fun stopLocationUpdates(promise: Promise) {
+    try {
+      val context = reactContext.applicationContext
+      context.startService(
+        Intent(context, LocationService::class.java).setAction(LocationService.ACTION_STOP),
+      )
+      promise.resolve(true)
+    } catch (e: Exception) {
+      promise.reject("LOCATION_STOP_FAILED", e.message, e)
+    }
   }
 }
