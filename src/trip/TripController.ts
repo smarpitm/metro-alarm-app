@@ -39,7 +39,7 @@ const ALARM_CONFIRMATIONS = 2; // consecutive windows at-or-below buffer before 
 const ARRIVE_RADIUS_M = 180;
 
 const R = 6371e3;
-const hav = (a: Fix | { lat: number; lon: number }, b: { lat: number; lon: number }) => {
+export const hav = (a: Fix | { lat: number; lon: number }, b: { lat: number; lon: number }) => {
   const p = Math.PI / 180;
   const dLat = (b.lat - a.lat) * p;
   const dLon = (b.lon - a.lon) * p;
@@ -64,6 +64,9 @@ export class TripController {
   private state: TripState = 'idle';
   private bufferStops = 1;
   private fired = false;
+  private lastAnchorTs = 0;
+  private ticker: ReturnType<typeof setInterval> | null = null;
+  private snoozeTimer: ReturnType<typeof setTimeout> | null = null;
   private snapshot: TripSnapshot = {
     state: 'idle',
     lastStation: null,
@@ -103,6 +106,9 @@ export class TripController {
     this.confirmCount = 0;
     this.fired = false;
     this.state = 'riding';
+    this.lastAnchorTs = Date.now();
+    this.startTicker();
+    this.rescheduleWatchdog();
     this.publish();
     return this.route;
   }
@@ -114,6 +120,8 @@ export class TripController {
     // (sensor-fusion tolerance; per doc §6.2 accuracy-better-than-50 m heuristic,
     // we accept up to 80 m here since station anchors have slack).
     if (fix.accuracy > 80) return;
+
+    this.lastAnchorTs = fix.ts || Date.now();
 
     // 1. anchor: nearest route station within snap radius, advancing forward only
     let bestIdx = -1;
@@ -128,6 +136,7 @@ export class TripController {
     if (bestIdx >= 0 && bestDist <= SNAP_RADIUS_M) {
       if (bestIdx > this.cursor) {
         this.cursor = bestIdx;
+        this.rescheduleWatchdog();
       }
     }
 
@@ -144,6 +153,8 @@ export class TripController {
 
     if (this.cursor >= this.route.length - 1 && distToDest <= ARRIVE_RADIUS_M) {
       this.state = 'done';
+      this.stopTicker();
+      void MetroAlarm.cancelScheduledAlarm();
       void MetroAlarm.stopAlarm();
       this.publish(0, distToDest, 0);
       return;
@@ -152,9 +163,7 @@ export class TripController {
     if (!this.fired && stopsRemaining <= this.bufferStops && distToDest < 2500) {
       this.confirmCount += 1;
       if (this.confirmCount >= ALARM_CONFIRMATIONS) {
-        this.fired = true;
-        this.state = 'alarmed';
-        void MetroAlarm.startAlarm();
+        this.triggerAlarm();
       }
     } else if (stopsRemaining > this.bufferStops + 1) {
       this.confirmCount = 0;
@@ -167,10 +176,102 @@ export class TripController {
     );
   }
 
+  /**
+   * Periodic tick (called every sec or on demand) to provide an underground ETA
+   * countdown fallback when GPS fixes cease (D-007 §6.7).
+   */
+  tick(now: number = Date.now()) {
+    if (this.state !== 'riding' || this.route.length === 0) return;
+    const elapsedS = Math.max(0, Math.floor((now - this.lastAnchorTs) / 1000));
+
+    let totalRemainS = 0;
+    for (let i = this.cursor; i < this.route.length - 1; i++) {
+      totalRemainS += this.route[i].toNextS;
+    }
+    const etaRemainS = Math.max(0, totalRemainS - elapsedS);
+
+    // Time to target alarm station (N stops before destination)
+    const targetIdx = Math.max(0, this.route.length - 1 - this.bufferStops);
+    let toBufferS = 0;
+    for (let i = this.cursor; i < targetIdx; i++) {
+      toBufferS += this.route[i].toNextS;
+    }
+
+    // If underground without GPS fixes for >= toBufferS, trigger ETA fallback alarm
+    if (!this.fired && elapsedS >= toBufferS && toBufferS >= 0) {
+      this.triggerAlarm();
+    }
+
+    // Fractional stops remaining via remaining travel time
+    const stopsFromCursor = this.route.length - 1 - this.cursor;
+    const estStopsRemaining =
+      totalRemainS > 0
+        ? Math.max(0, (etaRemainS / totalRemainS) * stopsFromCursor)
+        : 0;
+
+    this.publish(estStopsRemaining, this.snapshot.distM ?? undefined, etaRemainS);
+  }
+
+  private triggerAlarm() {
+    this.fired = true;
+    this.state = 'alarmed';
+    void MetroAlarm.startAlarm();
+  }
+
+  private rescheduleWatchdog() {
+    const targetIdx = Math.max(0, this.route.length - 1 - this.bufferStops);
+    let seconds = 0;
+    for (let i = this.cursor; i < targetIdx; i++) {
+      seconds += this.route[i].toNextS;
+    }
+    // Schedule native alarm watchdog at estimated buffer arrival timestamp
+    const triggerAt = Date.now() + Math.max(10, seconds) * 1000;
+    void MetroAlarm.scheduleAlarm(triggerAt);
+  }
+
+  private startTicker() {
+    this.stopTicker();
+    // ponytail: interval tick fallback for underground countdown; cancelled on trip end
+    const t = setInterval(() => this.tick(), 1000);
+    (t as any).unref?.();
+    this.ticker = t;
+  }
+
+  private stopTicker() {
+    if (this.ticker) {
+      clearInterval(this.ticker);
+      this.ticker = null;
+    }
+    if (this.snoozeTimer) {
+      clearTimeout(this.snoozeTimer);
+      this.snoozeTimer = null;
+    }
+  }
+
+  /** Snooze alarm for X minutes (silences audio, re-triggers later). */
+  snooze(minutes = 3) {
+    void MetroAlarm.stopAlarm();
+    this.fired = false;
+    this.state = 'riding';
+    const delayMs = minutes * 60 * 1000;
+    void MetroAlarm.scheduleAlarm(Date.now() + delayMs);
+    if (this.snoozeTimer) clearTimeout(this.snoozeTimer);
+    const st = setTimeout(() => {
+      if (this.state === 'riding') {
+        this.triggerAlarm();
+      }
+    }, delayMs);
+    (st as any).unref?.();
+    this.snoozeTimer = st;
+    this.publish();
+  }
+
   /** Dismiss the alarm (UI button). */
   dismiss() {
     if (this.state === 'alarmed') {
       void MetroAlarm.stopAlarm();
+      void MetroAlarm.cancelScheduledAlarm();
+      if (this.snoozeTimer) clearTimeout(this.snoozeTimer);
       this.state = 'riding';
       this.publish();
     }
@@ -180,6 +281,8 @@ export class TripController {
     this.state = 'idle';
     this.route = [];
     this.fired = false;
+    this.stopTicker();
+    void MetroAlarm.cancelScheduledAlarm();
     void MetroAlarm.stopAlarm();
     this.publish();
   }

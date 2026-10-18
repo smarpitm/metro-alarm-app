@@ -107,3 +107,25 @@ export function collectStations(network: NetworkData): Map<string, string> {
   }
   return map;
 }
+
+export interface StationCoord {
+  id: string;
+  name: string;
+  lat: number;
+  lon: number;
+}
+
+export function collectStationsWithCoords(network: NetworkData): StationCoord[] {
+  const map = new Map<string, StationCoord>();
+  for (const line of network.lines) {
+    for (const segment of line.segments) {
+      for (const s of segment.stations) {
+        if (!map.has(s.id) && s.lat != null && s.lon != null) {
+          map.set(s.id, { id: s.id, name: s.name, lat: s.lat, lon: s.lon });
+        }
+      }
+    }
+  }
+  return Array.from(map.values());
+}
+

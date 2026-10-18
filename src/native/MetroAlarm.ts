@@ -21,6 +21,12 @@ interface MetroAlarmNative {
   startLocationUpdates(): Promise<boolean>;
   /** Stop trip tracking. */
   stopLocationUpdates(): Promise<boolean>;
+  /** Schedule exact alarm via AlarmManager as an underground ETA watchdog (D-006 P4). */
+  scheduleAlarm(triggerAtMillis: number): Promise<boolean>;
+  /** Cancel any pending AlarmManager scheduled alarm. */
+  cancelScheduledAlarm(): Promise<boolean>;
+  /** One-shot coordinate read to find nearest station at trip start. */
+  getLastKnownLocation(): Promise<{ lat: number; lon: number; accuracy: number; ts: number } | null>;
 }
 
 const native = NativeModules.MetroAlarm as MetroAlarmNative | undefined;

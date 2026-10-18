@@ -1,5 +1,6 @@
 package com.metroalarm
 
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -60,6 +61,11 @@ class AlarmActivity : android.app.Activity() {
       setPadding(0, pad / 2, 0, pad * 2)
     }
 
+    val snoozeButton = Button(this).apply {
+      text = "Snooze (3 min)"
+      setOnClickListener { snoozeAlarm() }
+    }
+
     val stopButton = Button(this).apply {
       text = "Dismiss"
       setOnClickListener { dismissAlarm() }
@@ -68,6 +74,20 @@ class AlarmActivity : android.app.Activity() {
     root.addView(title)
     root.addView(subtitle)
     root.addView(
+      snoozeButton,
+      LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT,
+        LinearLayout.LayoutParams.WRAP_CONTENT,
+      ),
+    )
+    val spacer = View(this).apply {
+      layoutParams = LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT,
+        (resources.displayMetrics.density * 12).toInt(),
+      )
+    }
+    root.addView(spacer)
+    root.addView(
       stopButton,
       LinearLayout.LayoutParams(
         LinearLayout.LayoutParams.MATCH_PARENT,
@@ -75,6 +95,30 @@ class AlarmActivity : android.app.Activity() {
       ),
     )
     setContentView(root)
+  }
+
+  private fun snoozeAlarm() {
+    startService(
+      Intent(this, AlarmService::class.java).setAction(AlarmService.ACTION_STOP),
+    )
+    try {
+      val am = getSystemService(Context.ALARM_SERVICE) as android.app.AlarmManager
+      val intent = Intent(this, AlarmService::class.java)
+      val pi = android.app.PendingIntent.getService(
+        this,
+        MetroAlarmModule.SCHEDULE_REQUEST_CODE,
+        intent,
+        android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE,
+      )
+      val triggerAt = System.currentTimeMillis() + 180_000L
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        am.setExactAndAllowWhileIdle(android.app.AlarmManager.RTC_WAKEUP, triggerAt, pi)
+      } else {
+        am.setExact(android.app.AlarmManager.RTC_WAKEUP, triggerAt, pi)
+      }
+    } catch (_: Exception) {
+    }
+    finish()
   }
 
   private fun dismissAlarm() {

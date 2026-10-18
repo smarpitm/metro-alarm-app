@@ -56,4 +56,4 @@ export const delhiNetwork: NetworkData = {
   lines,
 };
 
-export { collectStations } from './data';
+export { collectStations, collectStationsWithCoords } from './data';

@@ -2,20 +2,20 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   DeviceEventEmitter,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import type { TextStyle, ViewStyle } from 'react-native';
 import type { Plan } from './src/metro/planner';
 import { planFastest, planLeastChanges } from './src/metro/planner';
-import { LINE_COLORS, delhiNetwork } from './src/metro/delhiNetwork';
+import { LINE_COLORS, collectStationsWithCoords, delhiNetwork } from './src/metro/delhiNetwork';
 import { collectStations } from './src/metro/data';
 import { MetroAlarm } from './src/native/MetroAlarm';
-import { TripController } from './src/trip/TripController';
+import { TripController, hav } from './src/trip/TripController';
 import type { TripSnapshot } from './src/trip/TripController';
 
 const fmtMin = (seconds: number) => `${Math.round(seconds / 60)} min`;
@@ -122,6 +122,7 @@ function TripScreen(props: {
   const [enteredAt, setEnteredAt] = useState('dwarka-sector-21');
   const [dest, setDest] = useState('yashobhoomi-dwarka-sector-25');
   const [buffer, setBuffer] = useState<1 | 2>(1);
+  const [locating, setLocating] = useState(false);
   const [snap, setSnap] = useState<TripSnapshot>({
     state: 'idle',
     lastStation: null,
@@ -141,6 +142,35 @@ function TripScreen(props: {
     };
   }, []);
 
+  const autoDetectOrigin = async () => {
+    setLocating(true);
+    try {
+      await MetroAlarm.requestLocationPermission();
+      const loc = await MetroAlarm.getLastKnownLocation();
+      if (loc) {
+        const coords = collectStationsWithCoords(delhiNetwork);
+        let closestId = enteredAt;
+        let minDist = Infinity;
+        for (const s of coords) {
+          const d = hav(loc, s);
+          if (d < minDist) {
+            minDist = d;
+            closestId = s.id;
+          }
+        }
+        setEnteredAt(closestId);
+      }
+    } finally {
+      setLocating(false);
+    }
+  };
+
+  const swapStations = () => {
+    const temp = enteredAt;
+    setEnteredAt(dest);
+    setDest(temp);
+  };
+
   const startTrip = async () => {
     await MetroAlarm.requestNotificationPermission();
     await MetroAlarm.requestLocationPermission();
@@ -159,6 +189,10 @@ function TripScreen(props: {
     trip.current?.dismiss();
   };
 
+  const snoozeAlarm = () => {
+    trip.current?.snooze(3);
+  };
+
   return (
     <View>
       {snap.state === 'idle' ? (
@@ -171,6 +205,16 @@ function TripScreen(props: {
             options={stations}
             onChange={setEnteredAt}
           />
+          <View style={styles.pickerActionRow}>
+            <Pressable style={styles.quickActionBtn} onPress={autoDetectOrigin} disabled={locating}>
+              <Text style={styles.quickActionText}>
+                {locating ? '📍 Locating station…' : '📍 Auto-detect origin'}
+              </Text>
+            </Pressable>
+            <Pressable style={styles.quickActionBtn} onPress={swapStations}>
+              <Text style={styles.quickActionText}>⇅ Swap</Text>
+            </Pressable>
+          </View>
           <TypeaheadPicker
             label="Going to"
             value={dest}
@@ -219,9 +263,14 @@ function TripScreen(props: {
             {snap.etaS != null ? `~${fmtMin(snap.etaS)} left` : ''}
           </Text>
           {snap.state === 'alarmed' ? (
-            <Pressable style={styles.primaryBtn} onPress={dismissAlarm}>
-              <Text style={styles.primaryBtnText}>Silence alarm</Text>
-            </Pressable>
+            <View style={styles.alarmActionRow}>
+              <Pressable style={[styles.primaryBtn, styles.snoozeBtn]} onPress={snoozeAlarm}>
+                <Text style={styles.primaryBtnText}>💤 Snooze 3m</Text>
+              </Pressable>
+              <Pressable style={[styles.primaryBtn, styles.silenceBtn]} onPress={dismissAlarm}>
+                <Text style={styles.primaryBtnText}>Silence alarm</Text>
+              </Pressable>
+            </View>
           ) : null}
           <Pressable style={[styles.primaryBtn, styles.stopTripBtn]} onPress={cancelTrip}>
             <Text style={styles.primaryBtnText}>End trip</Text>
@@ -425,6 +474,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   } as ViewStyle,
   alarmBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' } as TextStyle,
+  pickerActionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 6,
+    marginBottom: 4,
+    paddingHorizontal: 4,
+  } as ViewStyle,
+  quickActionBtn: {
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+  } as ViewStyle,
+  quickActionText: {
+    fontSize: 13,
+    color: '#0057B7',
+    fontWeight: '600',
+  } as TextStyle,
+  alarmActionRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 14,
+  } as ViewStyle,
+  snoozeBtn: {
+    flex: 1,
+    backgroundColor: '#d97706',
+    marginTop: 0,
+  } as ViewStyle,
+  silenceBtn: {
+    flex: 1,
+    backgroundColor: '#4b5563',
+    marginTop: 0,
+  } as ViewStyle,
 });
 
 export default App;

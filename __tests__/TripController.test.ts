@@ -11,6 +11,9 @@ jest.mock('../src/native/MetroAlarm', () => ({
     startLocationUpdates: jest.fn().mockResolvedValue(true),
     stopLocationUpdates: jest.fn().mockResolvedValue(true),
     isRinging: jest.fn().mockResolvedValue(false),
+    scheduleAlarm: jest.fn().mockResolvedValue(true),
+    cancelScheduledAlarm: jest.fn().mockResolvedValue(true),
+    getLastKnownLocation: jest.fn().mockResolvedValue({ lat: 28.55, lon: 77.05, accuracy: 10, ts: 1760000000000 }),
   },
 }));
 
@@ -134,5 +137,56 @@ describe('TripController (overview replay)', () => {
     });
     // snap radius unaffected lastStation still the same pinned station
     expect(lastSnap(states).lastStation).toBe(before);
+  });
+
+  it('schedules native alarm watchdog when armed and cancels when cancelled', () => {
+    const states: TripSnapshot[] = [];
+    const trip = new TripController(delhiNetwork, s => states.push({ ...s }));
+    trip.arm({ enteredAtId: 'dwarka-sector-21', destId: 'vaishali', bufferStops: 1 });
+    expect(MetroAlarm.scheduleAlarm).toHaveBeenCalled();
+
+    trip.cancel();
+    expect(MetroAlarm.cancelScheduledAlarm).toHaveBeenCalled();
+  });
+
+  it('triggers underground fallback alarm via ETA countdown when GPS is lost', () => {
+    const states: TripSnapshot[] = [];
+    const trip = new TripController(delhiNetwork, s => states.push({ ...s }));
+    const route = trip.arm({ enteredAtId: 'dwarka-sector-21', destId: 'vaishali', bufferStops: 1 });
+
+    // Ride until 2 stops before destination
+    const nearDestIdx = route.length - 3;
+    const now = 1_760_000_000_000;
+    const fixes = replay(route, nearDestIdx);
+    for (const fix of fixes) {
+      trip.onFix(fix);
+    }
+    expect(lastSnap(states).state).toBe('riding');
+
+    // Simulate GPS signal completely dying in a tunnel; advance clock past the buffer stop travel time
+    const timeToBufferStationS = route[nearDestIdx].toNextS + 10;
+    trip.tick((fixes.at(-1)?.ts ?? now) + timeToBufferStationS * 1000);
+
+    // Watchdog / ETA fallback triggers
+    expect(lastSnap(states).state).toBe('alarmed');
+    expect(MetroAlarm.startAlarm).toHaveBeenCalled();
+  });
+
+  it('snoozes the alarm and reschedules', () => {
+    const states: TripSnapshot[] = [];
+    const trip = new TripController(delhiNetwork, s => states.push({ ...s }));
+    const route = trip.arm({ enteredAtId: 'dwarka-sector-21', destId: 'vaishali', bufferStops: 1 });
+    for (const fix of replay(route, route.length - 2)) {
+      trip.onFix(fix);
+    }
+    expect(lastSnap(states).state).toBe('alarmed');
+
+    trip.snooze(3);
+    expect(MetroAlarm.stopAlarm).toHaveBeenCalled();
+    expect(trip.currentState.state).toBe('riding');
+    // schedules next alarm 3 mins (180,000 ms) in future
+    expect(MetroAlarm.scheduleAlarm).toHaveBeenCalled();
+
+    trip.cancel();
   });
 });
