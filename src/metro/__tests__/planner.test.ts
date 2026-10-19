@@ -58,7 +58,7 @@ describe('route planner (D-008)', () => {
       const fast = planFastest(require('../data').blueLineNetwork, 'dwarka-sector-21', 'noida-electronic-city');
       expect(fast!.changes).toBe(0);
       expect(fast!.legs).toHaveLength(1);
-      expect(fast!.stationCount).toBe(48); // 34 trunk + 15 noida − shared Yamuna Bank
+      expect(fast!.stationCount).toBe(50); // 34 trunk + 17 noida − shared Yamuna Bank
     });
 
     test('Vaishali → Tagore Garden also stays on one leg', () => {

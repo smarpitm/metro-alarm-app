@@ -286,7 +286,7 @@ function TripScreen(props: {
   const t = props.t;
   const stations = props.stations;
   const [enteredAt, setEnteredAt] = useState('dwarka-sector-21');
-  const [dest, setDest] = useState('yashobhoomi-dwarka-sector-25');
+  const [dest, setDest] = useState('noida-electronic-city');
   const [buffer, setBuffer] = useState<1 | 2>(1);
   const [locating, setLocating] = useState(false);
   const [snap, setSnap] = useState<TripSnapshot>({
@@ -296,7 +296,19 @@ function TripScreen(props: {
     distM: null,
     etaS: null,
   });
+  const [walkCountdown, setWalkCountdown] = useState<number | null>(null);
   const trip = useRef<TripController | null>(null);
+
+  /** Demo-mode toggle for the native alarm (no GPS needed). */
+  const toggleTestAlarm = async () => {
+    const isRinging = await MetroAlarm.isRinging();
+    if (isRinging) {
+      await MetroAlarm.stopAlarm();
+    } else {
+      await MetroAlarm.requestNotificationPermission();
+      await MetroAlarm.startAlarm();
+    }
+  };
 
   useEffect(() => {
     const sub = DeviceEventEmitter.addListener('MetroTripLocation', fix => {
@@ -307,6 +319,21 @@ function TripScreen(props: {
       trip.current?.cancel();
     };
   }, []);
+
+  /** Walk-to-exit countdown: when the train arrives at the destination,
+   * start a 90-second timer so the rider can gather things and reach the exit. */
+  useEffect(() => {
+    if (snap.state !== 'done') {
+      setWalkCountdown(null);
+      return;
+    }
+    setWalkCountdown(90);
+    const t = setInterval(() => {
+      setWalkCountdown(c => (c != null && c > 0 ? c - 1 : null));
+    }, 1000);
+    (t as any).unref?.();
+    return () => clearInterval(t);
+  }, [snap.state]);
 
   const autoDetectOrigin = async () => {
     setLocating(true);
@@ -413,6 +440,13 @@ function TripScreen(props: {
           ))}
         </View>
         <Button t={t} label="Start trip" onPress={startTrip} />
+        <Button
+          t={t}
+          variant="ghost"
+          noTopMargin
+          label="🔊 Test alarm (native)"
+          onPress={toggleTestAlarm}
+        />
         <Text style={[styles.note, { color: t.textDim }]}>
           GPS anchor above ground + timing estimates underground drive the countdown.
           Works with the phone locked and the app in the background.
@@ -488,6 +522,18 @@ function TripScreen(props: {
           </View>
         ) : null}
       </View>
+      {done && walkCountdown != null && walkCountdown > 0 ? (
+        <View style={styles.card}>
+          <Text style={[styles.cardTitle, { color: t.text }]}>🚶 Walk to exit</Text>
+          <Text style={[styles.tripBig, { color: t.accent }]}>
+            {walkCountdown}s
+          </Text>
+          <Text style={[styles.tripHint, { color: t.textDim }]}>
+            Gather your things and head to the exit before the doors close.
+          </Text>
+          <Button t={t} variant="ghost" noTopMargin label="End walk countdown" onPress={() => setWalkCountdown(null)} />
+        </View>
+      ) : null}
       {alarmed ? (
         <View style={styles.alarmActionRow}>
           <Button t={t} variant="warning" noTopMargin label="Snooze 3m" onPress={snoozeAlarm} />
@@ -509,7 +555,7 @@ function App(): React.JSX.Element {
   const [isDark, setIsDark] = useState(true);
   const t = isDark ? DARK : LIGHT;
   const [origin, setOrigin] = useState('dwarka-sector-21');
-  const [dest, setDest] = useState('yashobhoomi-dwarka-sector-25');
+  const [dest, setDest] = useState('noida-electronic-city');
   const [alarmRinging, setAlarmRinging] = useState(false);
 
   const fastest = useMemo(
