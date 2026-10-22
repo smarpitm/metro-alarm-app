@@ -28,11 +28,13 @@ Newest entries at the top. Keep entries small and factual; avoid re-litigating.
 **Date:** Oct 2026 · **Status:** P1 GPS path implemented (first cut) — TripController
 (declared boarding station + destination, GPS snap-to-station anchors along the
 planned route, N-stops-before-destination alarm with 2-confirmation window, noisy-
-fix rejection) + LocationService foreground service streaming fixes to JS.
+fix rejection, auto-detect origin via GPS fix snapped to the nearest planned station,
+snooze) + LocationService foreground service streaming fixes to JS.
 Accelerometer stop-counting, cell resync and ETA fallback come in P2–P4.
 Station data: full-network pack generated from OSM route relations + Wikipedia
-(open-station veto) via tools/data-prep/build-network.mjs; inter-station times are
-distance-derived estimates until P0 rides.
+(open-station veto) via tools/data-prep/build-network.mjs; the pack now carries
+per-station GPS anchors and distance-derived inter-station times
+(dwell + dist / V_EFF) — still estimates until P0 rides.
 
 - **Decision:** The app never tries to answer "which station am I standing in."
   The user declares origin & destination at trip start; runtime is a layered

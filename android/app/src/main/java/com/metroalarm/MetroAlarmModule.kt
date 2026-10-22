@@ -5,8 +5,12 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.location.Location
+import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Build
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
@@ -124,6 +128,40 @@ class MetroAlarmModule(private val reactContext: ReactApplicationContext) :
     }
   }
 
+  /**
+   * Adaptive GPS polling policy for battery optimization:
+   * 'economy'     -> 8000ms, 35m (cruising between distant stations)
+   * 'approaching' -> 2000ms, 12m (approaching destination or transfer station)
+   * 'balanced'    -> 4000ms, 20m (default riding)
+   */
+  @ReactMethod
+  fun setTrackingMode(mode: String, promise: Promise) {
+    try {
+      val context = reactContext.applicationContext
+      val intent = Intent(context, LocationService::class.java).apply {
+        action = LocationService.ACTION_UPDATE_POLICY
+        when (mode) {
+          "economy" -> {
+            putExtra(LocationService.EXTRA_MIN_TIME, 8000L)
+            putExtra(LocationService.EXTRA_MIN_DISTANCE, 35f)
+          }
+          "approaching" -> {
+            putExtra(LocationService.EXTRA_MIN_TIME, 2000L)
+            putExtra(LocationService.EXTRA_MIN_DISTANCE, 12f)
+          }
+          else -> {
+            putExtra(LocationService.EXTRA_MIN_TIME, 4000L)
+            putExtra(LocationService.EXTRA_MIN_DISTANCE, 20f)
+          }
+        }
+      }
+      context.startService(intent)
+      promise.resolve(true)
+    } catch (e: Exception) {
+      promise.reject("SET_POLICY_FAILED", e.message, e)
+    }
+  }
+
   /** Schedules an exact alarm via AlarmManager as an underground ETA watchdog (D-006 P4). */
   @ReactMethod
   fun scheduleAlarm(triggerAtMillis: Double, promise: Promise) {
@@ -170,13 +208,34 @@ class MetroAlarmModule(private val reactContext: ReactApplicationContext) :
     }
   }
 
+  @ReactMethod
+  fun saveString(key: String, value: String, promise: Promise) {
+    try {
+      val prefs = reactContext.getSharedPreferences("metro_alarm_prefs", Context.MODE_PRIVATE)
+      prefs.edit().putString(key, value).apply()
+      promise.resolve(true)
+    } catch (e: Exception) {
+      promise.reject("SAVE_FAILED", e.message, e)
+    }
+  }
+
+  @ReactMethod
+  fun getString(key: String, promise: Promise) {
+    try {
+      val prefs = reactContext.getSharedPreferences("metro_alarm_prefs", Context.MODE_PRIVATE)
+      promise.resolve(prefs.getString(key, null))
+    } catch (e: Exception) {
+      promise.reject("GET_FAILED", e.message, e)
+    }
+  }
+
   /** Quick one-shot coordinate read to auto-detect the nearest station at trip start. */
   @ReactMethod
   fun getLastKnownLocation(promise: Promise) {
     try {
       val lm = reactContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
       var bestLoc: Location? = null
-      for (provider in listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)) {
+      for (provider in listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER, LocationManager.PASSIVE_PROVIDER)) {
         try {
           val loc = lm.getLastKnownLocation(provider)
           if (loc != null && (bestLoc == null || loc.time > bestLoc.time)) {
@@ -185,19 +244,70 @@ class MetroAlarmModule(private val reactContext: ReactApplicationContext) :
         } catch (_: SecurityException) {
         }
       }
-      if (bestLoc != null) {
-        val map = Arguments.createMap().apply {
-          putDouble("lat", bestLoc.latitude)
-          putDouble("lon", bestLoc.longitude)
-          putDouble("accuracy", bestLoc.accuracy.toDouble())
-          putDouble("ts", bestLoc.time.toDouble())
+
+      val now = System.currentTimeMillis()
+      // If we have a fresh (under 2 minutes) accurate fix, return it immediately
+      if (bestLoc != null && (now - bestLoc.time < 120_000L) && bestLoc.accuracy <= 100f) {
+        promise.resolve(locationToMap(bestLoc))
+        return
+      }
+
+      // Otherwise request a fresh single fix with a 3.5s timeout fallback
+      var resolved = false
+      val handler = Handler(Looper.getMainLooper())
+      var listener: LocationListener? = null
+
+      val finish = { loc: Location? ->
+        if (!resolved) {
+          resolved = true
+          listener?.let {
+            try { lm.removeUpdates(it) } catch (_: SecurityException) {}
+          }
+          val finalLoc = loc ?: bestLoc
+          if (finalLoc != null) {
+            promise.resolve(locationToMap(finalLoc))
+          } else {
+            promise.resolve(null)
+          }
         }
-        promise.resolve(map)
-      } else {
-        promise.resolve(null)
+      }
+
+      val timeoutRunnable = Runnable { finish(null) }
+      handler.postDelayed(timeoutRunnable, 3500L)
+
+      listener = object : LocationListener {
+        override fun onLocationChanged(loc: Location) {
+          handler.removeCallbacks(timeoutRunnable)
+          finish(loc)
+        }
+        override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
+        override fun onProviderEnabled(provider: String) {}
+        override fun onProviderDisabled(provider: String) {}
+      }
+
+      var requested = false
+      for (provider in listOf(LocationManager.NETWORK_PROVIDER, LocationManager.GPS_PROVIDER)) {
+        try {
+          if (lm.isProviderEnabled(provider)) {
+            lm.requestLocationUpdates(provider, 0L, 0f, listener, Looper.getMainLooper())
+            requested = true
+          }
+        } catch (_: SecurityException) {}
+      }
+
+      if (!requested) {
+        handler.removeCallbacks(timeoutRunnable)
+        finish(null)
       }
     } catch (e: Exception) {
       promise.reject("LOCATION_FAILED", e.message, e)
     }
+  }
+
+  private fun locationToMap(loc: Location) = Arguments.createMap().apply {
+    putDouble("lat", loc.latitude)
+    putDouble("lon", loc.longitude)
+    putDouble("accuracy", loc.accuracy.toDouble())
+    putDouble("ts", loc.time.toDouble())
   }
 }

@@ -13,6 +13,7 @@ jest.mock('../src/native/MetroAlarm', () => ({
     isRinging: jest.fn().mockResolvedValue(false),
     scheduleAlarm: jest.fn().mockResolvedValue(true),
     cancelScheduledAlarm: jest.fn().mockResolvedValue(true),
+    setTrackingMode: jest.fn().mockResolvedValue(true),
     getLastKnownLocation: jest.fn().mockResolvedValue({ lat: 28.55, lon: 77.05, accuracy: 10, ts: 1760000000000 }),
   },
 }));
@@ -186,6 +187,165 @@ describe('TripController (overview replay)', () => {
     expect(trip.currentState.state).toBe('riding');
     // schedules next alarm 3 mins (180,000 ms) in future
     expect(MetroAlarm.scheduleAlarm).toHaveBeenCalled();
+
+    trip.cancel();
+  });
+
+  it('handles multi-line interchange: alerts before transfer, shows platform, and includes transfer penalty in ETA', () => {
+    const states: TripSnapshot[] = [];
+    const trip = new TripController(delhiNetwork, s => states.push({ ...s }));
+    // Central Secretariat (Yellow Line) -> Noida Sector 18 (Blue Line) transfers at Rajiv Chowk
+    const route = trip.arm({ enteredAtId: 'central-secretariat', destId: 'noida-sector-18', bufferStops: 1 });
+    const mandiIdx = route.findIndex(p => p.id === 'mandi-house');
+    expect(mandiIdx).toBeGreaterThan(0);
+
+    // Initial snapshot should include transfer penalty in ETA (at least 300s)
+    const initialSnap = lastSnap(states);
+    expect(initialSnap.etaS).toBeGreaterThanOrEqual(delhiNetwork.transferPenaltyS);
+    expect(initialSnap.interchange).not.toBeNull();
+    expect(initialSnap.interchange?.stationId).toBe('mandi-house');
+    expect(initialSnap.interchange?.platform).toBe('Platform 2');
+    expect(initialSnap.interchange?.instruction).toContain('Change at Mandi House');
+
+    // Replay fixes up to 1 stop before Mandi House (Janpath)
+    for (const fix of replay(route, mandiIdx - 1)) {
+      trip.onFix(fix);
+    }
+    const preInterchangeSnap = lastSnap(states);
+    expect(preInterchangeSnap.state).toBe('interchange_alarm');
+    expect(MetroAlarm.startAlarm).toHaveBeenCalled();
+
+    // Replay fix at Mandi House (transfer station arrival)
+    const mandiPin = route[mandiIdx];
+    trip.onFix({ lat: mandiPin.lat, lon: mandiPin.lon, accuracy: 5, speed: 1, ts: 1_760_005_000_000 });
+    expect(trip.currentState.state).toBe('interchanging');
+
+    // Advance to next leg
+    trip.advanceInterchange();
+    expect(trip.currentState.state).toBe('riding');
+
+    // Replay fixes to 1 stop before destination Noida Sector 18
+    for (const fix of replay(route, route.length - 2)) {
+      trip.onFix(fix);
+    }
+    const destAlarmSnap = lastSnap(states);
+    expect(destAlarmSnap.state).toBe('alarmed');
+
+    // Replay fix at final destination
+    const destPin = route.at(-1)!;
+    trip.onFix({ lat: destPin.lat, lon: destPin.lon, accuracy: 5, speed: 1, ts: 1_760_010_000_000 });
+    expect(trip.currentState.state).toBe('done');
+
+    trip.cancel();
+  });
+
+  it('pauses ETA countdown and does not trigger premature alarm while dwelling at station or interchange', () => {
+    const states: TripSnapshot[] = [];
+    const trip = new TripController(delhiNetwork, s => states.push({ ...s }));
+    const route = trip.arm({ enteredAtId: 'dwarka-sector-21', destId: 'vaishali', bufferStops: 1 });
+
+    const initialEta = trip.currentState.etaS!;
+    expect(trip.currentState.isDwelling).toBe(true);
+
+    // Rider spends 5 minutes standing still at Dwarka Sector 21 (speed 0.2 m/s, within station radius)
+    for (let sec = 1; sec <= 300; sec += 10) {
+      trip.onFix({
+        lat: route[0].lat + 0.0001,
+        lon: route[0].lon + 0.0001,
+        accuracy: 10,
+        speed: 0.2,
+        ts: 1_760_000_000_000 + sec * 1000,
+      });
+      trip.tick(1_760_000_000_000 + sec * 1000);
+    }
+
+    // ETA must NOT have decremented while stationary at the station!
+    expect(trip.currentState.etaS).toBe(initialEta);
+    expect(trip.currentState.state).toBe('riding');
+    expect(MetroAlarm.startAlarm).not.toHaveBeenCalled();
+
+    trip.cancel();
+  });
+
+  it('automatically detects boarded next train at interchange when moving onto next leg', () => {
+    const states: TripSnapshot[] = [];
+    const trip = new TripController(delhiNetwork, s => states.push({ ...s }));
+    // Central Secretariat -> Noida Sector 18 (interchange at Mandi House)
+    const route = trip.arm({ enteredAtId: 'central-secretariat', destId: 'noida-sector-18', bufferStops: 1 });
+    const mandiIdx = route.findIndex(p => p.id === 'mandi-house');
+
+    // Reach Mandi House interchange
+    for (const fix of replay(route, mandiIdx)) {
+      trip.onFix(fix);
+    }
+    const mandiPin = route[mandiIdx];
+    trip.onFix({ lat: mandiPin.lat, lon: mandiPin.lon, accuracy: 5, speed: 0.5, ts: 1_760_002_000_000 });
+    expect(trip.currentState.state).toBe('interchanging');
+
+    // Rider walks to next platform and boards next train towards Supreme Court (next station on Blue Line)
+    const nextLegPin = route[mandiIdx + 1];
+    // Fix near Supreme Court with motion speed
+    trip.onFix({
+      lat: nextLegPin.lat,
+      lon: nextLegPin.lon,
+      accuracy: 10,
+      speed: 8.0,
+      ts: 1_760_002_100_000,
+    });
+
+    // System automatically transitions out of interchanging back to riding!
+    expect(trip.currentState.state).toBe('riding');
+    expect(trip.currentState.lastStation).toBe(nextLegPin.name);
+
+    trip.cancel();
+  });
+
+  it('triggers recovery mode when rider boards the wrong train / off-route and supports recalculation', () => {
+    const states: TripSnapshot[] = [];
+    const trip = new TripController(delhiNetwork, s => states.push({ ...s }));
+    // Planned trip: Rajiv Chowk -> Dwarka Sector 21 (Blue Line heading west)
+    trip.arm({ enteredAtId: 'rajiv-chowk', destId: 'dwarka-sector-21', bufferStops: 1 });
+
+    // But user accidentally boarded the Yellow Line train heading north towards Kashmere Gate!
+    // Kashmere Gate coords: lat ~28.6675, lon ~77.2285
+    const kashmereFix: Fix = {
+      lat: 28.6675,
+      lon: 77.2285,
+      accuracy: 10,
+      speed: 10,
+      ts: 1_760_001_000_000,
+    };
+
+    trip.onFix(kashmereFix);
+    trip.onFix({ ...kashmereFix, ts: 1_760_001_005_000 });
+
+    expect(trip.currentState.state).toBe('wrong_trip');
+    expect(trip.currentState.recovery).not.toBeNull();
+    expect(trip.currentState.recovery?.currentStationId).toBe('kashmere-gate');
+    expect(trip.currentState.recovery?.recalculatedPlan).not.toBeNull();
+
+    // User taps 1-click recalculate
+    trip.recalculate();
+    expect(trip.currentState.state).toBe('riding');
+    expect(trip.currentState.lastStation).toBe('Kashmere Gate');
+
+    trip.cancel();
+  });
+
+  it('adjusts battery tracking mode between economy and approaching based on distance and stops', () => {
+    const states: TripSnapshot[] = [];
+    const trip = new TripController(delhiNetwork, s => states.push({ ...s }));
+    // Long trip: Dwarka Sector 21 -> Noida Electronic City (~50 km, > 40 stops)
+    const route = trip.arm({ enteredAtId: 'dwarka-sector-21', destId: 'noida-electronic-city', bufferStops: 1 });
+
+    // Cruising far away
+    trip.onFix({ lat: route[1].lat, lon: route[1].lon, accuracy: 10, speed: 12, ts: 1_760_000_050_000 });
+    expect(MetroAlarm.setTrackingMode).toHaveBeenCalledWith('economy');
+
+    // Nearing destination (1 stop away)
+    const nearDest = route[route.length - 2];
+    trip.onFix({ lat: nearDest.lat, lon: nearDest.lon, accuracy: 10, speed: 5, ts: 1_760_005_000_000 });
+    expect(MetroAlarm.setTrackingMode).toHaveBeenCalledWith('approaching');
 
     trip.cancel();
   });

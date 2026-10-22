@@ -1,6 +1,10 @@
 # Route Planner Design — fastest & least-transfers
 
-_status: draft v1 · covers: all Delhi Metro lines · last updated: Oct 2026_
+_status: v2 · implemented (first cut) · covers: all Delhi Metro lines · last updated: Oct 2026_
+
+> Shipped: planner engine (`src/metro/planner.ts` — Dijkstra fastest + least-changes),
+> planner UI in `App.tsx`, and the data pack (`src/metro/delhiNetwork.g.ts`, generated
+> by `tools/data-prep/build-network.mjs`). Tests in `__tests__/`.
 
 ## 1. Goal
 
@@ -24,37 +28,27 @@ interchanges). A Dijkstra over a few hundred nodes runs in well under 1 ms on a 
 The "fast" claim of this feature comes from being fully offline with a precomputed
 compact graph, not from exotic algorithms.
 
-## 3. Data model (shared with the app pack)
+## 3. Data pack (implemented: `src/metro/delhiNetwork.g.ts`)
 
-One `data/delhi_metro.json` (bag of files fine too):
+The pack is generated TypeScript (`tools/data-prep/build-network.mjs` →
+`src/metro/delhiNetwork.g.ts`), derived from OpenStreetMap route relations with
+Wikipedia as a cross-check. Shape (see `src/metro/data.ts`):
 
-```json
-{
-  "stations": [
-    {
-      "id": "rajiv_chowk",
-      "name": "Rajiv Chowk",
-      "lat": 28.6328, "lon": 77.2197,
-      "lines": ["blue", "yellow"],
-      "is_interchange": true
-    }
-  ],
-  "lines": [
-    {
-      "id": "blue",
-      "name": "Blue Line",
-      "color": "#0057B7",
-      "branches": [
-        { "id": "noida", "stations": [
-             { "id": "dwarka_sec21", "to_next_s": 165 },
-             { "id": "dwarka_sec8",  "to_next_s": 150 }  // time from THIS station to next, forward direction
-        ]},
-        { "id": "vaishali", "stations": "..." }
-      ]
-    }
-  ]
-}
+```ts
+StationDef { id, name, toNextS?, lat?, lon? }   // GPS anchor coords now populated
+SegmentDef { id, stations: StationDef[] }       // ordered; termini are first & last
+LineDef    { id, name, segments: SegmentDef[] } // segments = branches sharing junctions
+NetworkData { lines, transferPenaltyS, sameLineBranchPenaltyS }
 ```
+
+- Inter-station times (`toNextS`) are **distance-derived estimates**
+  (dwell + dist / V_EFF) until measured medians from Phase P0 rides replace them.
+- `transferPenaltyS`: walk+wait to change lines at one station complex
+  (`transfer edge`, below).
+- `sameLineBranchPenaltyS`: walk time across a branch junction on the *same* line
+  (e.g. Yamuna Bank on the Blue Line); a continuing train incurs 0.
+- Branches share the junction station once in each segment list, so
+  Dwarka↔Noida and Dwarka↔Vaishali are single-line (0-change) rides.
 
 Assumptions:
 - Inter-station travel times: median values (constant per segment) is enough for MVP;

@@ -47,13 +47,6 @@ export interface NetworkData {
 /** Legacy placeholder value kept for reference; real per-segment times are on each station now. */
 export const PLACEHOLDER_TO_NEXT_S = 160;
 
-function slug(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
-
 /** Trunk: Dwarka Sector 21 → Yamuna Bank (34 stations, reversed from generated seg1). */
 const trunkStations: StationDef[] = [
   { id: 'dwarka-sector-21', name: 'Dwarka Sector 21', lat: 28.551986, lon: 77.0584649, toNextS: 255 },

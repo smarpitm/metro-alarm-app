@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   DeviceEventEmitter,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -9,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import type { TextStyle, ViewStyle } from 'react-native';
+import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
 import type { Plan } from './src/metro/planner';
 import { planFastest, planLeastChanges } from './src/metro/planner';
 import { LINE_COLORS, collectStationsWithCoords, delhiNetwork } from './src/metro/delhiNetwork';
@@ -20,13 +21,15 @@ import type { TripSnapshot } from './src/trip/TripController';
 
 const fmtMin = (seconds: number) => `${Math.round(seconds / 60)} min`;
 
-/* ── Theme tokens ──────────────────────────────────────────────────── */
+/* ── Theme tokens (Rich Dark & Light Mode) ─────────────────────────── */
 
 type Theme = {
   bg: string;
   surface: string;
   surface2: string;
+  surfaceElevated: string;
   border: string;
+  borderStrong: string;
   text: string;
   textDim: string;
   textFaint: string;
@@ -36,43 +39,53 @@ type Theme = {
   red: string;
   dangerSoft: string;
   green: string;
+  greenSoft: string;
   amber: string;
+  amberSoft: string;
   dotBorder: string;
 };
 
 const DARK: Theme = {
-  bg: '#0b0f1a',
-  surface: '#151b2c',
-  surface2: '#1d2539',
-  border: 'rgba(255,255,255,0.08)',
-  text: '#eef2fb',
-  textDim: '#8b93a7',
-  textFaint: '#5b6274',
-  accent: '#3d7bff',
-  accentSoft: 'rgba(61,123,255,0.15)',
+  bg: '#0b0f19',
+  surface: '#141c2e',
+  surface2: '#1e293b',
+  surfaceElevated: '#243048',
+  border: 'rgba(255,255,255,0.09)',
+  borderStrong: 'rgba(255,255,255,0.18)',
+  text: '#f8fafc',
+  textDim: '#94a3b8',
+  textFaint: '#64748b',
+  accent: '#3b82f6',
+  accentSoft: 'rgba(59,130,246,0.18)',
   onAccent: '#ffffff',
-  red: '#e5484d',
-  dangerSoft: '#2a1116',
-  green: '#2e7d32',
-  amber: '#e8a33d',
-  dotBorder: '#0b0f1a',
+  red: '#ef4444',
+  dangerSoft: 'rgba(239,68,68,0.16)',
+  green: '#10b981',
+  greenSoft: 'rgba(16,185,129,0.16)',
+  amber: '#f59e0b',
+  amberSoft: 'rgba(245,158,11,0.16)',
+  dotBorder: '#141c2e',
 };
 
 const LIGHT: Theme = {
-  bg: '#f6f8fc',
+  bg: '#f8fafc',
   surface: '#ffffff',
-  surface2: '#eef1f7',
-  border: 'rgba(10,20,40,0.10)',
-  text: '#101728',
-  textDim: '#5a6478',
-  textFaint: '#98a1b3',
+  surface2: '#f1f5f9',
+  surfaceElevated: '#e2e8f0',
+  border: '#e2e8f0',
+  borderStrong: '#cbd5e1',
+  text: '#0f172a',
+  textDim: '#475569',
+  textFaint: '#94a3b8',
   accent: '#2563eb',
-  accentSoft: 'rgba(37,99,235,0.12)',
+  accentSoft: 'rgba(37,99,235,0.10)',
   onAccent: '#ffffff',
-  red: '#d3383d',
-  dangerSoft: '#fdecec',
-  green: '#2e7d32',
-  amber: '#b45309',
+  red: '#dc2626',
+  dangerSoft: '#fef2f2',
+  green: '#059669',
+  greenSoft: '#ecfdf5',
+  amber: '#d97706',
+  amberSoft: '#fffbeb',
   dotBorder: '#ffffff',
 };
 
@@ -82,7 +95,7 @@ function Button(props: {
   t: Theme;
   label: string;
   onPress: () => void;
-  variant?: 'primary' | 'ghost' | 'danger' | 'muted' | 'warning';
+  variant?: 'primary' | 'ghost' | 'danger' | 'muted' | 'warning' | 'success';
   disabled?: boolean;
   noTopMargin?: boolean;
 }) {
@@ -93,6 +106,7 @@ function Button(props: {
     danger: props.t.red,
     muted: props.t.surface2,
     warning: props.t.amber,
+    success: props.t.green,
   }[variant];
   return (
     <Pressable
@@ -100,7 +114,7 @@ function Button(props: {
       disabled={props.disabled}
       style={({ pressed }) => [
         styles.btn,
-        variant === 'ghost' && styles.btnGhost,
+        variant === 'ghost' && [styles.btnGhost, { borderColor: props.t.border }],
         props.noTopMargin && styles.btnNoMargin,
         { backgroundColor: bg },
         props.disabled && styles.btnDisabled,
@@ -117,13 +131,14 @@ function Button(props: {
   );
 }
 
-/** Type-to-search station picker with auto-complete suggestions. */
+/** Type-to-search station picker with quick search filter & clear button. */
 function TypeaheadPicker(props: {
   t: Theme;
   label: string;
   value: string;
   options: Map<string, string>;
   onChange: (id: string) => void;
+  placeholder?: string;
 }) {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
@@ -133,31 +148,39 @@ function TypeaheadPicker(props: {
     const all = [...props.options.entries()].sort((a, b) => a[1].localeCompare(b[1]));
     if (!query.trim()) return all.slice(0, 12);
     const q = query.trim().toLowerCase();
-    return all.filter(([, name]) => name.toLowerCase().includes(q)).slice(0, 12);
+    return all.filter(([, name]) => name.toLowerCase().includes(q)).slice(0, 14);
   }, [props.options, query]);
 
   return (
-    <View>
+    <View style={styles.pickerWrapper}>
       <Text style={[styles.label, { color: t.textDim }]}>{props.label}</Text>
-      <TextInput
+      <View
         style={[
-          styles.input,
-          { backgroundColor: t.surface, borderColor: t.border, color: t.text },
-        ]}
-        value={open ? query : (props.options.get(props.value) ?? '')}
-        placeholder="Type station name…"
-        placeholderTextColor={t.textFaint}
-        onFocus={() => {
-          setOpen(true);
-          setQuery('');
-        }}
-        onChangeText={setQuery}
-      />
+          styles.inputContainer,
+          { backgroundColor: t.surface, borderColor: open ? t.accent : t.border },
+        ]}>
+        <TextInput
+          style={[styles.inputField, { color: t.text }]}
+          value={open ? query : (props.options.get(props.value) ?? '')}
+          placeholder={props.placeholder ?? 'Type station name…'}
+          placeholderTextColor={t.textFaint}
+          onFocus={() => {
+            setOpen(true);
+            setQuery('');
+          }}
+          onChangeText={setQuery}
+        />
+        {open && query.length > 0 ? (
+          <Pressable onPress={() => setQuery('')} style={styles.inputClearBtn}>
+            <Text style={[styles.inputClearText, { color: t.textDim }]}>✕</Text>
+          </Pressable>
+        ) : null}
+      </View>
       {open ? (
         <View
           style={[
             styles.suggestBox,
-            { backgroundColor: t.surface2, borderColor: t.border },
+            { backgroundColor: t.surface, borderColor: t.borderStrong },
           ]}>
           <ScrollView style={styles.suggestScroll} keyboardShouldPersistTaps="handled">
             {filtered.map(([id, name]) => (
@@ -166,7 +189,7 @@ function TypeaheadPicker(props: {
                 style={({ pressed }) => [
                   styles.suggestRow,
                   { borderBottomColor: t.border },
-                  (id === props.value || pressed) && { backgroundColor: t.accent },
+                  (id === props.value || pressed) && { backgroundColor: t.accentSoft },
                 ]}
                 onPress={() => {
                   props.onChange(id);
@@ -175,9 +198,11 @@ function TypeaheadPicker(props: {
                 <Text
                   style={[
                     styles.suggestText,
-                    { color: id === props.value || open ? t.text : t.text },
+                    { color: id === props.value ? t.accent : t.text },
+                    id === props.value && styles.suggestTextActive,
                   ]}
                   numberOfLines={1}>
+                  {id === props.value ? '✓ ' : '  '}
                   {name}
                 </Text>
               </Pressable>
@@ -201,17 +226,13 @@ function RouteCard(props: {
   title: string;
   plan: Plan | null;
   note?: string;
+  onSetAlarm?: () => void;
 }) {
   const t = props.t;
-  if (!props.plan) {
-    return null;
-  }
+  if (!props.plan) return null;
+
   return (
-    <View
-      style={[
-        styles.card,
-        { backgroundColor: t.surface, borderColor: t.border },
-      ]}>
+    <View style={[styles.card, { backgroundColor: t.surface, borderColor: t.border }]}>
       <View style={styles.cardHead}>
         <Text style={[styles.cardTitle, { color: t.text }]}>{props.title}</Text>
         <View style={styles.cardMeta}>
@@ -221,8 +242,8 @@ function RouteCard(props: {
           <Text style={[styles.cardMetaDim, { color: t.textDim }]}>
             {props.plan.stationCount} stops ·{' '}
             {props.plan.changes === 0
-              ? 'no change'
-              : `${props.plan.changes} ${props.plan.changes === 1 ? 'change' : 'changes'}`}
+              ? 'direct'
+              : `${props.plan.changes} ${props.plan.changes === 1 ? 'transfer' : 'transfers'}`}
           </Text>
         </View>
       </View>
@@ -232,14 +253,14 @@ function RouteCard(props: {
             <View
               style={[
                 styles.legRail,
-                { borderLeftColor: LINE_COLORS[leg.lineId] ?? '#667' },
+                { borderLeftColor: LINE_COLORS[leg.lineId] ?? props.t.accent },
               ]}>
               <View style={styles.legStationRow}>
                 <View
                   style={[
                     styles.legDot,
                     {
-                      borderColor: LINE_COLORS[leg.lineId] ?? '#667',
+                      borderColor: LINE_COLORS[leg.lineId] ?? props.t.accent,
                       backgroundColor: t.dotBorder,
                     },
                   ]}
@@ -250,13 +271,11 @@ function RouteCard(props: {
               </View>
               <View style={styles.legStationRow}>
                 <Text style={[styles.legStops, { color: t.textFaint }]}>
-                  {leg.stations.length > 2 ? `${leg.stations.length - 2} stops` : 'direct'}
+                  {leg.stations.length > 2 ? `${leg.stations.length - 2} intermediate stops` : 'direct run'}
                 </Text>
               </View>
               <View style={styles.legStationRow}>
-                <View
-                  style={[styles.legDotEnd, { backgroundColor: t.textDim }]}
-                />
+                <View style={[styles.legDotEnd, { backgroundColor: t.textDim }]} />
                 <Text style={[styles.legStation, { color: t.text }]} numberOfLines={1}>
                   {leg.alightName}
                 </Text>
@@ -264,160 +283,310 @@ function RouteCard(props: {
             </View>
             {i < props.plan!.legs.length - 1 ? (
               <View style={styles.transferRow}>
-                <Text style={[styles.transferText, { color: t.amber }]}>↓ interchange</Text>
+                <Text style={[styles.transferText, { color: t.amber }]}>↓ change line at {leg.alightName}</Text>
               </View>
             ) : null}
           </View>
         ))}
       </View>
       {props.note ? <Text style={[styles.note, { color: t.textDim }]}>{props.note}</Text> : null}
+      {props.onSetAlarm ? (
+        <Button
+          t={t}
+          variant="primary"
+          noTopMargin
+          label="🚀 Set Alarm for this Route"
+          onPress={props.onSetAlarm}
+        />
+      ) : null}
     </View>
   );
 }
 
-/* ── Trip screen ───────────────────────────────────────────────────── */
+/* ── Active Trip Banner (Shown in Planner so trip is never lost) ─────── */
+
+function ActiveTripBanner(props: {
+  t: Theme;
+  snap: TripSnapshot;
+  onPress: () => void;
+}) {
+  const t = props.t;
+  const stops = props.snap.stopsRemaining != null ? Math.max(0, Math.ceil(props.snap.stopsRemaining)) : null;
+
+  return (
+    <Pressable
+      onPress={props.onPress}
+      style={({ pressed }) => [
+        styles.activeBanner,
+        { backgroundColor: t.surface, borderColor: t.green },
+        pressed && styles.btnPressed,
+      ]}>
+      <View style={styles.activeBannerLeft}>
+        <View style={[styles.pulsingDot, { backgroundColor: t.green }]} />
+        <View>
+          <Text style={[styles.activeBannerTitle, { color: t.text }]}>Active Trip in Progress</Text>
+          <Text style={[styles.activeBannerSub, { color: t.textDim }]}>
+            {stops != null ? `${stops} ${stops === 1 ? 'stop' : 'stops'} left` : 'Tracking GPS…'}
+            {props.snap.distM != null ? ` · ${(props.snap.distM / 1000).toFixed(1)} km` : ''}
+            {props.snap.etaS != null ? ` · ~${fmtMin(props.snap.etaS)}` : ''}
+          </Text>
+        </View>
+      </View>
+      <Text style={[styles.activeBannerAction, { color: t.accent }]}>View ➔</Text>
+    </Pressable>
+  );
+}
+
+/* ── Splash Input Screen ───────────────────────────────────────────── */
+
+interface SavedRide {
+  enteredAt: string;
+  dest: string;
+  buffer: 1 | 2;
+}
+
+function SplashInputScreen(props: {
+  t: Theme;
+  stations: Map<string, string>;
+  enteredAt: string;
+  setEnteredAt: (id: string) => void;
+  dest: string;
+  setDest: (id: string) => void;
+  buffer: 1 | 2;
+  setBuffer: (b: 1 | 2) => void;
+  recentRides: SavedRide[];
+  locating: boolean;
+  detectMsg: string | null;
+  onAutoDetect: () => void;
+  onSwap: () => void;
+  onStartTrip: () => void;
+  onOpenPlanner: () => void;
+  onTestAlarm: () => void;
+}) {
+  const t = props.t;
+
+  return (
+    <View style={styles.splashContainer}>
+      {/* Hero Branding */}
+      <View style={styles.splashHero}>
+        <View style={[styles.metroIconRing, { backgroundColor: t.accentSoft, borderColor: t.accent }]}>
+          <Image source={require('./assets/icon.png')} style={styles.splashHeroImg} resizeMode="contain" />
+        </View>
+        <Text style={[styles.splashTitle, { color: t.text }]}>Delhi Metro Alarm</Text>
+        <Text style={[styles.splashTagline, { color: t.textDim }]}>
+          Never miss your station. Wake up 1–2 stops early even with the screen off.
+        </Text>
+        <View style={[styles.offlineBadge, { backgroundColor: t.greenSoft, borderColor: t.green }]}>
+          <Text style={[styles.offlineBadgeText, { color: t.green }]}>● 100% Offline Geofencing · DMRC</Text>
+        </View>
+      </View>
+
+      {/* Hero Input Card */}
+      <View style={[styles.splashCard, { backgroundColor: t.surface, borderColor: t.border }]}>
+        <Text style={[styles.splashCardHeading, { color: t.text }]}>Start Your Journey</Text>
+
+        <TypeaheadPicker
+          t={t}
+          label="Where are you going?"
+          placeholder="Destination station…"
+          value={props.dest}
+          options={props.stations}
+          onChange={props.setDest}
+        />
+
+        <TypeaheadPicker
+          t={t}
+          label="Boarded at"
+          placeholder="Origin station…"
+          value={props.enteredAt}
+          options={props.stations}
+          onChange={props.setEnteredAt}
+        />
+
+        <View style={styles.pickerActionRow}>
+          <Button
+            t={t}
+            variant="ghost"
+            noTopMargin
+            label={props.locating ? '◎ Locating…' : '◎ Auto-detect station'}
+            onPress={props.onAutoDetect}
+            disabled={props.locating}
+          />
+          <Button t={t} variant="ghost" noTopMargin label="⇅ Swap" onPress={props.onSwap} />
+        </View>
+        {props.detectMsg ? (
+          <Text style={[styles.detectFeedback, { color: t.accent }]}>{props.detectMsg}</Text>
+        ) : null}
+
+        <Text style={[styles.label, { color: t.textDim }]}>Alarm trigger timing</Text>
+        <View style={styles.bufferRow}>
+          {[1, 2].map(n => (
+            <Pressable
+              key={n}
+              style={[
+                styles.bufferChip,
+                { backgroundColor: t.surface2, borderColor: t.border },
+                props.buffer === n && { backgroundColor: t.accent, borderColor: t.accent },
+              ]}
+              onPress={() => props.setBuffer(n as 1 | 2)}>
+              <Text
+                style={[
+                  styles.bufferText,
+                  { color: props.buffer === n ? t.onAccent : t.textDim },
+                ]}>
+                🔔 {n} stop{n > 1 ? 's' : ''} before destination
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+
+        <Button t={t} variant="primary" label="🚀 Start Journey Alarm" onPress={props.onStartTrip} />
+      </View>
+
+      {/* Recent Trips / Quick Commute */}
+      {props.recentRides.length > 0 ? (
+        <View style={styles.recentContainer}>
+          <Text style={[styles.recentTitle, { color: t.textDim }]}>⚡ Quick Commute / Recent Trips</Text>
+          <View style={styles.recentWrap}>
+            {props.recentRides.map((r, i) => (
+              <Pressable
+                key={i}
+                style={({ pressed }) => [
+                  styles.recentChip,
+                  { backgroundColor: t.surface, borderColor: t.border },
+                  pressed && styles.btnPressed,
+                ]}
+                onPress={() => {
+                  props.setEnteredAt(r.enteredAt);
+                  props.setDest(r.dest);
+                  props.setBuffer(r.buffer);
+                }}>
+                <Text style={[styles.recentChipText, { color: t.text }]} numberOfLines={1}>
+                  {props.stations.get(r.enteredAt) ?? r.enteredAt} ➔ {props.stations.get(r.dest) ?? r.dest}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      ) : null}
+
+      {/* Secondary Actions */}
+      <View style={styles.splashFootActions}>
+        <Button
+          t={t}
+          variant="muted"
+          noTopMargin
+          label="🗺 Open Route Planner"
+          onPress={props.onOpenPlanner}
+        />
+        <Button
+          t={t}
+          variant="ghost"
+          noTopMargin
+          label="🔊 Test Alarm Audio"
+          onPress={props.onTestAlarm}
+        />
+      </View>
+    </View>
+  );
+}
+
+/* ── Trip Screen (Active & Idle Ride Management) ────────────────────── */
 
 function TripScreen(props: {
   t: Theme;
   stations: Map<string, string>;
-  options: string[];
-  testAlarmState: boolean;
+  enteredAt: string;
+  setEnteredAt: (id: string) => void;
+  dest: string;
+  setDest: (id: string) => void;
+  buffer: 1 | 2;
+  setBuffer: (b: 1 | 2) => void;
+  recentRides: SavedRide[];
+  snap: TripSnapshot;
+  locating: boolean;
+  detectMsg: string | null;
+  walkCountdown: number | null;
+  onAutoDetect: () => void;
+  onSwap: () => void;
+  onStartTrip: () => void;
+  onCancelTrip: () => void;
+  onDismissAlarm: () => void;
+  onSnoozeAlarm: () => void;
+  onAdvanceInterchange: () => void;
+  onRecalculateRecovery: () => void;
+  onDismissRecovery: () => void;
+  onEndWalkCountdown: () => void;
+  onTestAlarm: () => void;
 }) {
   const t = props.t;
+  const snap = props.snap;
   const stations = props.stations;
-  const [enteredAt, setEnteredAt] = useState('dwarka-sector-21');
-  const [dest, setDest] = useState('noida-electronic-city');
-  const [buffer, setBuffer] = useState<1 | 2>(1);
-  const [locating, setLocating] = useState(false);
-  const [snap, setSnap] = useState<TripSnapshot>({
-    state: 'idle',
-    lastStation: null,
-    stopsRemaining: null,
-    distM: null,
-    etaS: null,
-  });
-  const [walkCountdown, setWalkCountdown] = useState<number | null>(null);
-  const trip = useRef<TripController | null>(null);
-
-  /** Demo-mode toggle for the native alarm (no GPS needed). */
-  const toggleTestAlarm = async () => {
-    const isRinging = await MetroAlarm.isRinging();
-    if (isRinging) {
-      await MetroAlarm.stopAlarm();
-    } else {
-      await MetroAlarm.requestNotificationPermission();
-      await MetroAlarm.startAlarm();
-    }
-  };
-
-  useEffect(() => {
-    const sub = DeviceEventEmitter.addListener('MetroTripLocation', fix => {
-      trip.current?.onFix(fix);
-    });
-    return () => {
-      sub.remove();
-      trip.current?.cancel();
-    };
-  }, []);
-
-  /** Walk-to-exit countdown: when the train arrives at the destination,
-   * start a 90-second timer so the rider can gather things and reach the exit. */
-  useEffect(() => {
-    if (snap.state !== 'done') {
-      setWalkCountdown(null);
-      return;
-    }
-    setWalkCountdown(90);
-    const t = setInterval(() => {
-      setWalkCountdown(c => (c != null && c > 0 ? c - 1 : null));
-    }, 1000);
-    (t as any).unref?.();
-    return () => clearInterval(t);
-  }, [snap.state]);
-
-  const autoDetectOrigin = async () => {
-    setLocating(true);
-    try {
-      await MetroAlarm.requestLocationPermission();
-      const loc = await MetroAlarm.getLastKnownLocation();
-      if (loc) {
-        const coords = collectStationsWithCoords(delhiNetwork);
-        let closestId = enteredAt;
-        let minDist = Infinity;
-        for (const s of coords) {
-          const d = hav(loc, s);
-          if (d < minDist) {
-            minDist = d;
-            closestId = s.id;
-          }
-        }
-        setEnteredAt(closestId);
-      }
-    } finally {
-      setLocating(false);
-    }
-  };
-
-  const swapStations = () => {
-    const temp = enteredAt;
-    setEnteredAt(dest);
-    setDest(temp);
-  };
-
-  const startTrip = async () => {
-    await MetroAlarm.requestNotificationPermission();
-    await MetroAlarm.requestLocationPermission();
-    const controller = new TripController(delhiNetwork, s => setSnap({ ...s }));
-    trip.current = controller;
-    controller.arm({ enteredAtId: enteredAt, destId: dest, bufferStops: buffer });
-    await MetroAlarm.startLocationUpdates();
-  };
-
-  const cancelTrip = () => {
-    trip.current?.cancel();
-    void MetroAlarm.stopLocationUpdates();
-  };
-
-  const dismissAlarm = () => {
-    trip.current?.dismiss();
-  };
-
-  const snoozeAlarm = () => {
-    trip.current?.snooze(3);
-  };
 
   if (snap.state === 'idle') {
     return (
       <View>
         <Text style={[styles.sub, { color: t.textDim }]}>
-          Boarded the metro? Tell us where — the alarm fires {buffer} stop(s) before your
-          station, even with the screen off.
+          Boarded the metro? Select your journey details. The alarm fires {props.buffer} stop(s)
+          before your destination using GPS distance and station arrivals.
         </Text>
+
+        {props.recentRides.length > 0 ? (
+          <View style={styles.recentContainer}>
+            <Text style={[styles.recentTitle, { color: t.textDim }]}>⚡ Frequent commutes</Text>
+            <View style={styles.recentWrap}>
+              {props.recentRides.map((r, i) => (
+                <Pressable
+                  key={i}
+                  style={({ pressed }) => [
+                    styles.recentChip,
+                    { backgroundColor: t.surface, borderColor: t.border },
+                    pressed && styles.btnPressed,
+                  ]}
+                  onPress={() => {
+                    props.setEnteredAt(r.enteredAt);
+                    props.setDest(r.dest);
+                    props.setBuffer(r.buffer);
+                  }}>
+                  <Text style={[styles.recentChipText, { color: t.text }]} numberOfLines={1}>
+                    {stations.get(r.enteredAt) ?? r.enteredAt} ➔ {stations.get(r.dest) ?? r.dest}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        ) : null}
+
         <TypeaheadPicker
           t={t}
           label="I entered at"
-          value={enteredAt}
+          value={props.enteredAt}
           options={stations}
-          onChange={setEnteredAt}
+          onChange={props.setEnteredAt}
         />
         <View style={styles.pickerActionRow}>
           <Button
             t={t}
             variant="ghost"
             noTopMargin
-            label={locating ? '◎ Locating…' : '◎ Auto-detect origin'}
-            onPress={autoDetectOrigin}
-            disabled={locating}
+            label={props.locating ? '◎ Locating…' : '◎ Auto-detect station'}
+            onPress={props.onAutoDetect}
+            disabled={props.locating}
           />
-          <Button t={t} variant="ghost" noTopMargin label="⇅ Swap" onPress={swapStations} />
+          <Button t={t} variant="ghost" noTopMargin label="⇅ Swap" onPress={props.onSwap} />
         </View>
+        {props.detectMsg ? (
+          <Text style={[styles.detectFeedback, { color: t.accent }]}>{props.detectMsg}</Text>
+        ) : null}
+
         <TypeaheadPicker
           t={t}
           label="Going to"
-          value={dest}
+          value={props.dest}
           options={stations}
-          onChange={setDest}
+          onChange={props.setDest}
         />
+
         <Text style={[styles.label, { color: t.textDim }]}>Alarm before destination</Text>
         <View style={styles.bufferRow}>
           {[1, 2].map(n => (
@@ -426,36 +595,39 @@ function TripScreen(props: {
               style={[
                 styles.bufferChip,
                 { backgroundColor: t.surface, borderColor: t.border },
-                buffer === n && { backgroundColor: t.accent, borderColor: t.accent },
+                props.buffer === n && { backgroundColor: t.accent, borderColor: t.accent },
               ]}
-              onPress={() => setBuffer(n as 1 | 2)}>
+              onPress={() => props.setBuffer(n as 1 | 2)}>
               <Text
                 style={[
                   styles.bufferText,
-                  { color: buffer === n ? t.onAccent : t.textDim },
+                  { color: props.buffer === n ? t.onAccent : t.textDim },
                 ]}>
                 {n} stop{n > 1 ? 's' : ''} early
               </Text>
             </Pressable>
           ))}
         </View>
-        <Button t={t} label="Start trip" onPress={startTrip} />
+        <Button t={t} label="Start trip" onPress={props.onStartTrip} />
         <Button
           t={t}
           variant="ghost"
           noTopMargin
-          label="🔊 Test alarm (native)"
-          onPress={toggleTestAlarm}
+          label="🔊 Test alarm sound"
+          onPress={props.onTestAlarm}
         />
         <Text style={[styles.note, { color: t.textDim }]}>
-          GPS anchor above ground + timing estimates underground drive the countdown.
-          Works with the phone locked and the app in the background.
+          Distance and verified station arrivals drive the alarm. Battery optimized for long rides.
+          Works with the phone locked and the app in background.
         </Text>
       </View>
     );
   }
 
   const alarmed = snap.state === 'alarmed';
+  const interchangeAlarmed = snap.state === 'interchange_alarm';
+  const interchanging = snap.state === 'interchanging';
+  const wrongTrip = snap.state === 'wrong_trip';
   const done = snap.state === 'done';
   const stops = snap.stopsRemaining != null ? Math.max(0, Math.ceil(snap.stopsRemaining)) : null;
 
@@ -465,27 +637,77 @@ function TripScreen(props: {
         styles.tripCard,
         { backgroundColor: t.surface, borderColor: t.border },
         alarmed && { borderColor: t.red, backgroundColor: t.dangerSoft },
-        done && { borderColor: t.green },
+        interchangeAlarmed && { borderColor: t.amber, backgroundColor: t.amberSoft },
+        wrongTrip && { borderColor: t.red, backgroundColor: t.dangerSoft },
+        done && { borderColor: t.green, backgroundColor: t.greenSoft },
       ]}>
+      {/* Status Pill */}
       <View
         style={[
           styles.statusPill,
           { backgroundColor: t.accentSoft },
           alarmed && { backgroundColor: t.red },
+          interchangeAlarmed && { backgroundColor: t.amber },
+          interchanging && { backgroundColor: t.accent },
+          wrongTrip && { backgroundColor: t.red },
+          done && { backgroundColor: t.green },
         ]}>
         <Text
           style={[
             styles.statusPillText,
             { color: t.accent },
-            alarmed && { color: t.onAccent },
+            (alarmed || interchanging || wrongTrip || done) && { color: t.onAccent },
+            interchangeAlarmed && { color: t.bg },
           ]}>
           {alarmed
-            ? '● ALARM — get off soon'
-            : done
-              ? '● Arrived'
-              : '● Riding'}
+            ? '● DESTINATION ALARM — WAKE UP & GET READY'
+            : interchangeAlarmed
+              ? '● CHANGE TRAIN — INTERCHANGE COMING UP'
+              : interchanging
+                ? '● AT INTERCHANGE — CHANGING PLATFORM'
+                : wrongTrip
+                  ? '⚠️ OFF-ROUTE / WRONG TRAIN DETECTED'
+                  : done
+                    ? '● ARRIVED AT DESTINATION'
+                    : snap.isDwelling
+                      ? '● AT STATION — WAITING FOR DEPARTURE'
+                      : '● RIDING IN TRANSIT'}
         </Text>
       </View>
+
+      {/* Recovery Card (Off-route / Wrong trip recovery mode) */}
+      {wrongTrip && snap.recovery ? (
+        <View style={[styles.recoveryBox, { backgroundColor: t.surface, borderColor: t.red }]}>
+          <Text style={[styles.recoveryTitle, { color: t.red }]}>⚠️ Recovery Mode</Text>
+          <Text style={[styles.recoveryMessage, { color: t.text }]}>
+            {snap.recovery.message}
+          </Text>
+          {snap.recovery.recalculatedPlan ? (
+            <View style={styles.recoveryDetails}>
+              <Text style={[styles.recoveryPlanText, { color: t.accent }]}>
+                New route to {snap.recovery.destinationName}: {snap.recovery.recalculatedPlan.stationCount} stops, ~
+                {fmtMin(snap.recovery.recalculatedPlan.timeS)}
+              </Text>
+              <Button
+                t={t}
+                variant="primary"
+                noTopMargin
+                label="🔄 Recalculate Route from Here"
+                onPress={props.onRecalculateRecovery}
+              />
+            </View>
+          ) : null}
+          <Button
+            t={t}
+            variant="ghost"
+            noTopMargin
+            label="Dismiss (I'm on the right track)"
+            onPress={props.onDismissRecovery}
+          />
+        </View>
+      ) : null}
+
+      {/* Main Big Stop Counter */}
       <Text style={[styles.tripBig, { color: t.text }]}>
         {done ? '✓' : stops != null ? stops : '…'}
         {!done ? (
@@ -495,9 +717,63 @@ function TripScreen(props: {
           </Text>
         ) : null}
       </Text>
-      {stops == null && !done ? (
-        <Text style={[styles.tripHint, { color: t.textDim }]}>waiting for GPS anchor</Text>
+
+      {/* Distance as Final Metric Badge */}
+      {snap.distM != null && !done ? (
+        <View style={[styles.distanceBadge, { backgroundColor: t.surface2, borderColor: t.border }]}>
+          <Text style={[styles.distanceBadgeText, { color: t.accent }]}>
+            📍 {(snap.distM / 1000).toFixed(1)} km to destination (Distance Metric)
+          </Text>
+        </View>
       ) : null}
+
+      {/* Dwell notification: ETA is held while stopped */}
+      {snap.isDwelling && !done && (
+        <Text style={[styles.dwellNotice, { color: t.amber }]}>
+          ℹ️ Stopped at station platform. ETA remains held until the train departs.
+        </Text>
+      )}
+
+      {/* Interchange guidance card */}
+      {snap.interchange ? (
+        <View
+          style={[
+            styles.interchangeCard,
+            { backgroundColor: t.surface2, borderColor: interchangeAlarmed ? t.amber : t.border },
+          ]}>
+          <Text style={[styles.interchangeTitle, { color: interchangeAlarmed ? t.amber : t.accent }]}>
+            {interchangeAlarmed
+              ? '⚠️ Transfer Ahead'
+              : interchanging
+                ? '🔄 Change Line Now'
+                : 'ℹ️ Upcoming Transfer'}
+          </Text>
+          <Text style={[styles.interchangeInstruction, { color: t.text }]}>
+            {snap.interchange.instruction}
+          </Text>
+          {snap.interchange.platform ? (
+            <Text style={[styles.platformBadge, { color: t.amber }]}>
+              ➔ Take {snap.interchange.platform}
+            </Text>
+          ) : null}
+          {interchanging ? (
+            <View style={styles.interchangeAutoBox}>
+              <Text style={[styles.interchangeAutoNotice, { color: t.textDim }]}>
+                ✨ Next train will be auto-detected when in motion.
+              </Text>
+              <Button
+                t={t}
+                noTopMargin
+                variant="ghost"
+                label="Manual: Boarded next train ✓"
+                onPress={props.onAdvanceInterchange}
+              />
+            </View>
+          ) : null}
+        </View>
+      ) : null}
+
+      {/* Ride Stats Grid */}
       <View style={styles.tripStats}>
         {snap.lastStation ? (
           <View style={styles.tripStat}>
@@ -511,60 +787,220 @@ function TripScreen(props: {
           <View style={styles.tripStat}>
             <Text style={[styles.tripStatLabel, { color: t.textFaint }]}>distance</Text>
             <Text style={[styles.tripStatValue, { color: t.text }]}>
-              {Math.round(snap.distM)} m
+              {(snap.distM / 1000).toFixed(1)} km
             </Text>
           </View>
         ) : null}
         {snap.etaS != null ? (
           <View style={styles.tripStat}>
-            <Text style={[styles.tripStatLabel, { color: t.textFaint }]}>eta</Text>
-            <Text style={[styles.tripStatValue, { color: t.text }]}>{fmtMin(snap.etaS)}</Text>
+            <Text style={[styles.tripStatLabel, { color: t.textFaint }]}>estimated time</Text>
+            <Text style={[styles.tripStatValue, { color: t.text }]}>
+              {fmtMin(snap.etaS)}
+            </Text>
           </View>
         ) : null}
+        <View style={styles.tripStat}>
+          <Text style={[styles.tripStatLabel, { color: t.textFaint }]}>battery saver</Text>
+          <Text style={[styles.tripStatValue, { color: t.green }]}>
+            {snap.batteryMode === 'economy' ? '⚡ Economy (8s)' : '⚡ Active (2s)'}
+          </Text>
+        </View>
       </View>
-      {done && walkCountdown != null && walkCountdown > 0 ? (
-        <View style={styles.card}>
+
+      {/* Walk-to-exit countdown */}
+      {done && props.walkCountdown != null && props.walkCountdown > 0 ? (
+        <View style={[styles.walkCard, { backgroundColor: t.surface2, borderColor: t.green }]}>
           <Text style={[styles.cardTitle, { color: t.text }]}>🚶 Walk to exit</Text>
-          <Text style={[styles.tripBig, { color: t.accent }]}>
-            {walkCountdown}s
-          </Text>
+          <Text style={[styles.tripBig, { color: t.accent }]}>{props.walkCountdown}s</Text>
           <Text style={[styles.tripHint, { color: t.textDim }]}>
-            Gather your things and head to the exit before the doors close.
+            Gather your belongings and head to the exit gate.
           </Text>
-          <Button t={t} variant="ghost" noTopMargin label="End walk countdown" onPress={() => setWalkCountdown(null)} />
+          <Button
+            t={t}
+            variant="ghost"
+            noTopMargin
+            label="Dismiss countdown"
+            onPress={props.onEndWalkCountdown}
+          />
         </View>
       ) : null}
-      {alarmed ? (
+
+      {/* Alarm controls */}
+      {alarmed || interchangeAlarmed ? (
         <View style={styles.alarmActionRow}>
-          <Button t={t} variant="warning" noTopMargin label="Snooze 3m" onPress={snoozeAlarm} />
-          <Button t={t} variant="muted" noTopMargin label="Silence alarm" onPress={dismissAlarm} />
+          <Button t={t} variant="warning" noTopMargin label="Snooze 3m" onPress={props.onSnoozeAlarm} />
+          <Button t={t} variant="muted" noTopMargin label="Silence alarm" onPress={props.onDismissAlarm} />
         </View>
       ) : null}
-      <Button t={t} variant="ghost" noTopMargin label="End trip" onPress={cancelTrip} />
+      <Button t={t} variant="ghost" noTopMargin label="End trip" onPress={props.onCancelTrip} />
     </View>
   );
 }
 
-/* ── App ───────────────────────────────────────────────────────────── */
+/* ── Main App Component ────────────────────────────────────────────── */
 
 function App(): React.JSX.Element {
   const stations = useMemo(() => collectStations(delhiNetwork), []);
   const options = useMemo(() => Array.from(stations.keys()), [stations]);
 
-  const [mode, setMode] = useState<'planner' | 'trip'>('planner');
+  // Persistent Trip Controller at App level
+  const [mode, setMode] = useState<'splash' | 'trip' | 'planner'>('splash');
   const [isDark, setIsDark] = useState(true);
   const t = isDark ? DARK : LIGHT;
-  const [origin, setOrigin] = useState('dwarka-sector-21');
-  const [dest, setDest] = useState('noida-electronic-city');
-  const [alarmRinging, setAlarmRinging] = useState(false);
 
+  const [enteredAt, setEnteredAt] = useState('dwarka-sector-21');
+  const [dest, setDest] = useState('noida-electronic-city');
+  const [buffer, setBuffer] = useState<1 | 2>(1);
+  const [locating, setLocating] = useState(false);
+  const [detectMsg, setDetectMsg] = useState<string | null>(null);
+  const [recentRides, setRecentRides] = useState<SavedRide[]>([]);
+  const [alarmRinging, setAlarmRinging] = useState(false);
+  const [walkCountdown, setWalkCountdown] = useState<number | null>(null);
+
+  const [snap, setSnap] = useState<TripSnapshot>({
+    state: 'idle',
+    lastStation: null,
+    stopsRemaining: null,
+    distM: null,
+    etaS: null,
+    interchange: null,
+    recovery: null,
+    isDwelling: false,
+    batteryMode: 'balanced',
+  });
+
+  const trip = useRef<TripController | null>(null);
+
+  // Initialize TripController once at App level and persist across navigation
+  useEffect(() => {
+    const controller = new TripController(delhiNetwork, s => setSnap({ ...s }));
+    trip.current = controller;
+
+    const sub = DeviceEventEmitter.addListener('MetroTripLocation', fix => {
+      controller.onFix(fix);
+    });
+
+    (async () => {
+      try {
+        const lastTrip = await MetroAlarm.getString('metro_last_trip');
+        if (lastTrip) {
+          const parsed = JSON.parse(lastTrip);
+          if (parsed.enteredAt) setEnteredAt(parsed.enteredAt);
+          if (parsed.dest) setDest(parsed.dest);
+          if (parsed.buffer) setBuffer(parsed.buffer);
+        }
+        const recents = await MetroAlarm.getString('metro_recent_rides');
+        if (recents) {
+          const list = JSON.parse(recents);
+          if (Array.isArray(list)) setRecentRides(list);
+        }
+      } catch {
+        // Ignored
+      }
+    })();
+
+    return () => {
+      sub.remove();
+      controller.cancel();
+    };
+  }, []);
+
+  // Walk countdown
+  useEffect(() => {
+    if (snap.state !== 'done') {
+      setWalkCountdown(null);
+      return;
+    }
+    setWalkCountdown(90);
+    const tTimer = setInterval(() => {
+      setWalkCountdown(c => (c != null && c > 0 ? c - 1 : null));
+    }, 1000);
+    (tTimer as any).unref?.();
+    return () => clearInterval(tTimer);
+  }, [snap.state]);
+
+  const autoDetectOrigin = async () => {
+    setLocating(true);
+    setDetectMsg(null);
+    try {
+      await MetroAlarm.requestLocationPermission();
+      const loc = await MetroAlarm.getLastKnownLocation();
+      if (loc) {
+        const coords = collectStationsWithCoords(delhiNetwork);
+        let closest = coords[0];
+        let minDist = Infinity;
+        for (const s of coords) {
+          const d = hav(loc, s);
+          if (d < minDist) {
+            minDist = d;
+            closest = s;
+          }
+        }
+        if (closest) {
+          setEnteredAt(closest.id);
+          const distStr = minDist < 1000 ? `${Math.round(minDist)} m` : `${(minDist / 1000).toFixed(1)} km`;
+          setDetectMsg(`📍 Nearest: ${closest.name} (${distStr} away)`);
+        }
+      } else {
+        setDetectMsg('⚠️ GPS fix unavailable. Pick your station manually.');
+      }
+    } catch {
+      setDetectMsg('⚠️ Location access failed. Pick your station manually.');
+    } finally {
+      setLocating(false);
+    }
+  };
+
+  const swapStations = () => {
+    const temp = enteredAt;
+    setEnteredAt(dest);
+    setDest(temp);
+  };
+
+  const startTripWithStations = async (originId: string, destId: string, buf: 1 | 2 = 1) => {
+    await MetroAlarm.requestNotificationPermission();
+    await MetroAlarm.requestLocationPermission();
+
+    const updated = [
+      { enteredAt: originId, dest: destId, buffer: buf },
+      ...recentRides.filter(r => !(r.enteredAt === originId && r.dest === destId)),
+    ].slice(0, 4);
+    setRecentRides(updated);
+    MetroAlarm.saveString('metro_last_trip', JSON.stringify({ enteredAt: originId, dest: destId, buffer: buf })).catch(() => {});
+    MetroAlarm.saveString('metro_recent_rides', JSON.stringify(updated)).catch(() => {});
+
+    if (trip.current) {
+      trip.current.arm({ enteredAtId: originId, destId: destId, bufferStops: buf });
+      await MetroAlarm.startLocationUpdates();
+      setMode('trip');
+    }
+  };
+
+  const cancelTrip = () => {
+    trip.current?.cancel();
+    MetroAlarm.stopLocationUpdates().catch(() => {});
+  };
+
+  const toggleTestAlarm = async () => {
+    const isRinging = await MetroAlarm.isRinging();
+    if (isRinging || alarmRinging) {
+      await MetroAlarm.stopAlarm();
+      setAlarmRinging(false);
+    } else {
+      await MetroAlarm.requestNotificationPermission();
+      await MetroAlarm.startAlarm();
+      setAlarmRinging(true);
+    }
+  };
+
+  // Planner routes
   const fastest = useMemo(
-    () => (origin !== dest ? planFastest(delhiNetwork, origin, dest) : null),
-    [origin, dest],
+    () => (enteredAt !== dest ? planFastest(delhiNetwork, enteredAt, dest) : null),
+    [enteredAt, dest],
   );
   const leastChanges = useMemo(
-    () => (origin !== dest ? planLeastChanges(delhiNetwork, origin, dest) : null),
-    [origin, dest],
+    () => (enteredAt !== dest ? planLeastChanges(delhiNetwork, enteredAt, dest) : null),
+    [enteredAt, dest],
   );
   const identical =
     fastest != null &&
@@ -572,21 +1008,21 @@ function App(): React.JSX.Element {
     fastest.changes === leastChanges.changes &&
     fastest.timeS === leastChanges.timeS;
 
-  const toggleTestAlarm = async () => {
-    if (alarmRinging) {
-      await MetroAlarm.stopAlarm();
-      setAlarmRinging(false);
-      return;
-    }
-    await MetroAlarm.requestNotificationPermission();
-    await MetroAlarm.startAlarm();
-    setAlarmRinging(true);
-  };
+  const isTripActive = snap.state !== 'idle' && snap.state !== 'done';
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: t.bg }]} edges={['top', 'left', 'right']}>
-      <View style={styles.topBar}>
-        <Text style={[styles.appTitle, { color: t.text }]}>Metro Alarm</Text>
+      {/* Top Navigation Bar */}
+      <View style={[styles.topBar, { borderBottomColor: t.border }]}>
+        <Pressable
+          onPress={() => setMode('splash')}
+          style={({ pressed }) => [styles.logoButton, pressed && styles.btnPressed]}>
+          <Image source={require('./assets/icon.png')} style={styles.topLogoImg} resizeMode="contain" />
+          <View>
+            <Text style={[styles.appTitle, { color: t.text }]}>Metro Alarm</Text>
+            <Text style={[styles.topSubtitle, { color: t.textDim }]}>Delhi Metro Geofenced</Text>
+          </View>
+        </Pressable>
         <Pressable
           onPress={() => setIsDark(v => !v)}
           style={({ pressed }) => [
@@ -597,70 +1033,174 @@ function App(): React.JSX.Element {
           <Text style={[styles.themeToggleIcon, { color: t.text }]}>{isDark ? '☀' : '☾'}</Text>
         </Pressable>
       </View>
-      <View style={styles.tabs}>
-        {(['planner', 'trip'] as const).map(m => (
-          <Pressable
-            key={m}
-            style={({ pressed }) => [
-              styles.tab,
-              { backgroundColor: t.surface },
-              mode === m && { backgroundColor: t.accent },
-              pressed && styles.tabPressed,
-            ]}
-            onPress={() => setMode(m)}>
-            <Text
-              style={[
-                styles.tabText,
-                { color: t.textDim },
-                mode === m && { color: t.onAccent },
-              ]}>
-              {m === 'planner' ? 'Planner' : 'Trip alarm'}
-            </Text>
-          </Pressable>
-        ))}
+
+      {/* Segmented Tab Navigation */}
+      <View style={[styles.tabs, { backgroundColor: t.surface2, borderColor: t.border }]}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.tab,
+            mode === 'splash' && [styles.tabActive, { backgroundColor: t.surface }],
+            pressed && styles.tabPressed,
+          ]}
+          onPress={() => setMode('splash')}>
+          <Text
+            style={[
+              styles.tabText,
+              { color: t.textDim },
+              mode === 'splash' && [{ color: t.accent }, styles.tabTextActive],
+            ]}>
+            🏠 Start
+          </Text>
+        </Pressable>
+
+        <Pressable
+          style={({ pressed }) => [
+            styles.tab,
+            mode === 'trip' && [styles.tabActive, { backgroundColor: t.surface }],
+            pressed && styles.tabPressed,
+          ]}
+          onPress={() => setMode('trip')}>
+          <Text
+            style={[
+              styles.tabText,
+              { color: t.textDim },
+              mode === 'trip' && [{ color: t.accent }, styles.tabTextActive],
+            ]}>
+            🔔 Trip alarm {isTripActive ? '●' : ''}
+          </Text>
+        </Pressable>
+
+        <Pressable
+          style={({ pressed }) => [
+            styles.tab,
+            mode === 'planner' && [styles.tabActive, { backgroundColor: t.surface }],
+            pressed && styles.tabPressed,
+          ]}
+          onPress={() => setMode('planner')}>
+          <Text
+            style={[
+              styles.tabText,
+              { color: t.textDim },
+              mode === 'planner' && [{ color: t.accent }, styles.tabTextActive],
+            ]}>
+            🗺 Planner
+          </Text>
+        </Pressable>
       </View>
+
+      {/* Active Trip Banner if viewing planner while a ride is active */}
+      {mode === 'planner' && isTripActive ? (
+        <ActiveTripBanner t={t} snap={snap} onPress={() => setMode('trip')} />
+      ) : null}
+
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled">
-        {mode === 'planner' ? (
+        {mode === 'splash' ? (
+          <SplashInputScreen
+            t={t}
+            stations={stations}
+            enteredAt={enteredAt}
+            setEnteredAt={setEnteredAt}
+            dest={dest}
+            setDest={setDest}
+            buffer={buffer}
+            setBuffer={setBuffer}
+            recentRides={recentRides}
+            locating={locating}
+            detectMsg={detectMsg}
+            onAutoDetect={autoDetectOrigin}
+            onSwap={swapStations}
+            onStartTrip={() => startTripWithStations(enteredAt, dest, buffer)}
+            onOpenPlanner={() => setMode('planner')}
+            onTestAlarm={toggleTestAlarm}
+          />
+        ) : mode === 'trip' ? (
+          <TripScreen
+            t={t}
+            stations={stations}
+            enteredAt={enteredAt}
+            setEnteredAt={setEnteredAt}
+            dest={dest}
+            setDest={setDest}
+            buffer={buffer}
+            setBuffer={setBuffer}
+            recentRides={recentRides}
+            snap={snap}
+            locating={locating}
+            detectMsg={detectMsg}
+            walkCountdown={walkCountdown}
+            onAutoDetect={autoDetectOrigin}
+            onSwap={swapStations}
+            onStartTrip={() => startTripWithStations(enteredAt, dest, buffer)}
+            onCancelTrip={cancelTrip}
+            onDismissAlarm={() => trip.current?.dismiss()}
+            onSnoozeAlarm={() => trip.current?.snooze(3)}
+            onAdvanceInterchange={() => trip.current?.advanceInterchange()}
+            onRecalculateRecovery={() => trip.current?.recalculate()}
+            onDismissRecovery={() => trip.current?.dismissRecovery()}
+            onEndWalkCountdown={() => setWalkCountdown(null)}
+            onTestAlarm={toggleTestAlarm}
+          />
+        ) : (
           <>
-            <Text style={[styles.header, { color: t.text }]}>Route planner</Text>
+            <Text style={[styles.header, { color: t.text }]}>Delhi Route Planner</Text>
             <Text style={[styles.sub, { color: t.textDim }]}>
-              Delhi Metro · {options.length} stations · fully offline
+              {options.length} stations across all Delhi Metro lines · 100% offline
             </Text>
-            <TypeaheadPicker t={t} label="From" value={origin} options={stations} onChange={setOrigin} />
-            <TypeaheadPicker t={t} label="To" value={dest} options={stations} onChange={setDest} />
-            {origin === dest ? (
+            <TypeaheadPicker
+              t={t}
+              label="Starting Station"
+              value={enteredAt}
+              options={stations}
+              onChange={setEnteredAt}
+            />
+            <TypeaheadPicker
+              t={t}
+              label="Destination Station"
+              value={dest}
+              options={stations}
+              onChange={setDest}
+            />
+            {enteredAt === dest ? (
               <Text style={[styles.note, { color: t.textDim }]}>
-                Pick two different stations.
+                Select two different stations to calculate routing.
               </Text>
             ) : (
               <>
-                <RouteCard t={t} title="Fastest" plan={fastest} />
-                <RouteCard t={t} title="Fewest changes" plan={leastChanges} />
+                <RouteCard
+                  t={t}
+                  title="⚡ Fastest Journey"
+                  plan={fastest}
+                  onSetAlarm={() => startTripWithStations(enteredAt, dest, buffer)}
+                />
+                <RouteCard
+                  t={t}
+                  title="🔄 Fewest Transfers"
+                  plan={leastChanges}
+                  onSetAlarm={() => startTripWithStations(enteredAt, dest, buffer)}
+                />
                 {identical ? (
                   <Text style={[styles.note, { color: t.textDim }]}>
-                    Both routes match — origin and destination share one line.
+                    Both routes match — origin and destination share one direct line.
                   </Text>
                 ) : null}
                 <Button
                   t={t}
-                  variant={alarmRinging ? 'muted' : 'danger'}
-                  label={alarmRinging ? 'Stop alarm' : 'Test alarm (D-006)'}
+                  variant={alarmRinging ? 'muted' : 'ghost'}
+                  label={alarmRinging ? 'Stop test alarm' : '🔊 Test Alarm Sound'}
                   onPress={toggleTestAlarm}
                 />
               </>
             )}
           </>
-        ) : (
-          <TripScreen t={t} stations={stations} options={options} testAlarmState={alarmRinging} />
         )}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-/* ── Styles (layout only; colors are per-theme) ────────────────────── */
+/* ── Styles (Aesthetic & Polish) ──────────────────────────────────── */
 
 const styles = StyleSheet.create({
   root: { flex: 1 } as ViewStyle,
@@ -670,17 +1210,32 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 2,
+    paddingBottom: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   } as ViewStyle,
+  logoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  } as ViewStyle,
+  topLogoImg: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+  } as ImageStyle,
   appTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '800',
     letterSpacing: 0.3,
   } as TextStyle,
+  topSubtitle: {
+    fontSize: 11,
+    fontWeight: '500',
+  } as TextStyle,
   themeToggle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -688,93 +1243,123 @@ const styles = StyleSheet.create({
   themeToggleIcon: { fontSize: 16, fontWeight: '700' } as TextStyle,
   tabs: {
     flexDirection: 'row',
-    margin: 12,
-    marginTop: 6,
+    marginHorizontal: 16,
+    marginTop: 8,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'transparent',
-    padding: 4,
+    padding: 3,
     gap: 4,
   } as ViewStyle,
   tab: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 8,
     alignItems: 'center',
     borderRadius: 9,
   } as ViewStyle,
-  tabPressed: { opacity: 0.85 } as ViewStyle,
-  tabText: { fontSize: 14, fontWeight: '600' } as TextStyle,
+  tabActive: {
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  } as ViewStyle,
+  tabPressed: { opacity: 0.8 } as ViewStyle,
+  tabText: { fontSize: 13, fontWeight: '600' } as TextStyle,
+  tabTextActive: { fontWeight: '800' } as TextStyle,
   content: { padding: 16, paddingBottom: 40 } as ViewStyle,
-  header: { fontSize: 26, fontWeight: '800' } as TextStyle,
+  header: { fontSize: 24, fontWeight: '800' } as TextStyle,
   sub: {
     fontSize: 13,
     marginBottom: 16,
     marginTop: 4,
     lineHeight: 19,
   } as TextStyle,
+  pickerWrapper: {
+    marginBottom: 8,
+  } as ViewStyle,
   label: {
-    fontSize: 12,
-    marginTop: 14,
+    fontSize: 11,
+    marginTop: 8,
     marginBottom: 6,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
-    fontWeight: '600',
+    fontWeight: '700',
   } as TextStyle,
-  input: {
-    borderWidth: 1,
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1.2,
     borderRadius: 12,
-    padding: 14,
-    fontSize: 16,
-  } as unknown as ViewStyle,
-  suggestBox: {
-    borderWidth: 1,
-    borderRadius: 12,
-    marginTop: 6,
-    overflow: 'hidden',
+    paddingHorizontal: 12,
   } as ViewStyle,
-  suggestScroll: { maxHeight: 280 } as ViewStyle,
-  suggestRow: {
+  inputField: {
+    flex: 1,
     paddingVertical: 12,
+    fontSize: 15,
+    fontWeight: '500',
+  } as TextStyle,
+  inputClearBtn: {
+    padding: 6,
+  } as ViewStyle,
+  inputClearText: {
+    fontSize: 14,
+    fontWeight: '700',
+  } as TextStyle,
+  suggestBox: {
+    borderWidth: 1.5,
+    borderRadius: 12,
+    marginTop: 4,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+  } as ViewStyle,
+  suggestScroll: { maxHeight: 220 } as ViewStyle,
+  suggestRow: {
+    paddingVertical: 11,
     paddingHorizontal: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
   } as ViewStyle,
-  suggestText: { fontSize: 15 } as TextStyle,
-  suggestEmpty: { padding: 14, fontSize: 14 } as TextStyle,
+  suggestText: { fontSize: 14, fontWeight: '500' } as TextStyle,
+  suggestTextActive: { fontWeight: '700' } as TextStyle,
+  suggestEmpty: { padding: 14, fontSize: 13 } as TextStyle,
   btn: {
-    marginTop: 20,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
+    marginTop: 14,
+    paddingVertical: 13,
+    paddingHorizontal: 18,
     borderRadius: 12,
     alignItems: 'center',
+    justifyContent: 'center',
   } as ViewStyle,
-  btnGhost: { borderWidth: 1, borderColor: 'transparent' } as ViewStyle,
+  btnGhost: { borderWidth: 1 } as ViewStyle,
   btnNoMargin: { marginTop: 0 } as ViewStyle,
-  btnPressed: { opacity: 0.75, transform: [{ scale: 0.98 }] } as ViewStyle,
-  btnDisabled: { opacity: 0.5 } as ViewStyle,
-  btnText: { fontSize: 15, fontWeight: '700' } as TextStyle,
+  btnPressed: { opacity: 0.78, transform: [{ scale: 0.985 }] } as ViewStyle,
+  btnDisabled: { opacity: 0.45 } as ViewStyle,
+  btnText: { fontSize: 14, fontWeight: '700' } as TextStyle,
   card: {
-    marginTop: 18,
+    marginTop: 14,
     padding: 16,
     borderRadius: 16,
-    borderWidth: 1,
+    borderWidth: 1.2,
   } as ViewStyle,
   cardHead: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
+    marginBottom: 6,
   } as ViewStyle,
-  cardTitle: { fontSize: 17, fontWeight: '700' } as TextStyle,
+  cardTitle: { fontSize: 16, fontWeight: '700' } as TextStyle,
   cardMeta: { alignItems: 'flex-end' } as ViewStyle,
-  cardMetaBig: { fontSize: 20, fontWeight: '800' } as TextStyle,
+  cardMetaBig: { fontSize: 19, fontWeight: '800' } as TextStyle,
   cardMetaDim: { fontSize: 12, marginTop: 2 } as TextStyle,
-  timeline: { marginTop: 14, gap: 4 } as ViewStyle,
+  timeline: { marginTop: 12, marginBottom: 12, gap: 4 } as ViewStyle,
   leg: {} as ViewStyle,
-  legRail: { borderLeftWidth: 3, paddingLeft: 14, marginLeft: 4 } as ViewStyle,
+  legRail: { borderLeftWidth: 3.5, paddingLeft: 14, marginLeft: 4 } as ViewStyle,
   legStationRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    paddingVertical: 4,
+    paddingVertical: 3,
   } as ViewStyle,
   legDot: {
     width: 12,
@@ -783,48 +1368,65 @@ const styles = StyleSheet.create({
     borderWidth: 3,
   } as ViewStyle,
   legDotEnd: { width: 8, height: 8, borderRadius: 4 } as ViewStyle,
-  legStation: { fontSize: 15, fontWeight: '600', flexShrink: 1 } as TextStyle,
+  legStation: { fontSize: 14, fontWeight: '600', flexShrink: 1 } as TextStyle,
   legStops: { fontSize: 12, marginLeft: 22 } as TextStyle,
   transferRow: { paddingLeft: 22, paddingVertical: 6 } as ViewStyle,
   transferText: {
     fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    fontWeight: '700',
+    letterSpacing: 0.4,
   } as TextStyle,
-  note: { fontSize: 13, marginTop: 12, lineHeight: 19 } as TextStyle,
+  note: { fontSize: 12, marginTop: 10, marginBottom: 10, lineHeight: 18 } as TextStyle,
   pickerActionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginTop: 2,
+    marginBottom: 6,
   } as ViewStyle,
-  bufferRow: { flexDirection: 'row', gap: 8 } as ViewStyle,
+  bufferRow: { flexDirection: 'row', gap: 8, marginTop: 2 } as ViewStyle,
   bufferChip: {
-    borderWidth: 1,
+    flex: 1,
+    borderWidth: 1.2,
     borderRadius: 10,
     paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
+    alignItems: 'center',
   } as ViewStyle,
-  bufferText: { fontSize: 13, fontWeight: '600' } as TextStyle,
+  bufferText: { fontSize: 12, fontWeight: '700' } as TextStyle,
   tripCard: {
-    marginTop: 12,
-    padding: 20,
-    borderRadius: 16,
-    borderWidth: 1,
+    marginTop: 8,
+    padding: 18,
+    borderRadius: 18,
+    borderWidth: 1.5,
     alignItems: 'flex-start',
   } as ViewStyle,
   statusPill: {
     borderRadius: 999,
     paddingHorizontal: 12,
-    paddingVertical: 4,
+    paddingVertical: 5,
   } as ViewStyle,
   statusPillText: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: 11,
+    fontWeight: '800',
     letterSpacing: 0.5,
   } as TextStyle,
-  tripBig: { fontSize: 56, fontWeight: '900', marginTop: 10 } as TextStyle,
+  tripBig: { fontSize: 52, fontWeight: '900', marginTop: 8 } as TextStyle,
   tripBigUnit: { fontSize: 18, fontWeight: '600' } as TextStyle,
   tripHint: { fontSize: 13, marginTop: 4, fontStyle: 'italic' } as TextStyle,
+  distanceBadge: {
+    marginTop: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+  } as ViewStyle,
+  distanceBadgeText: { fontSize: 13, fontWeight: '700' } as TextStyle,
+  dwellNotice: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 6,
+    lineHeight: 18,
+  } as TextStyle,
   tripStats: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -839,12 +1441,206 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     fontWeight: '700',
   } as TextStyle,
-  tripStatValue: { fontSize: 15, fontWeight: '600', marginTop: 2 } as TextStyle,
+  tripStatValue: { fontSize: 15, fontWeight: '700', marginTop: 2 } as TextStyle,
   alarmActionRow: {
     flexDirection: 'row',
     gap: 10,
     alignSelf: 'stretch',
-    marginTop: 6,
+    marginTop: 10,
+  } as ViewStyle,
+  recentContainer: {
+    marginTop: 12,
+    marginBottom: 8,
+  } as ViewStyle,
+  recentTitle: {
+    fontSize: 11,
+    fontWeight: '700',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  } as TextStyle,
+  recentWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  } as ViewStyle,
+  recentChip: {
+    borderWidth: 1.2,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    maxWidth: '100%',
+  } as ViewStyle,
+  recentChipText: {
+    fontSize: 12,
+    fontWeight: '600',
+  } as TextStyle,
+  detectFeedback: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 4,
+    marginBottom: 4,
+  } as TextStyle,
+  interchangeCard: {
+    borderWidth: 1.5,
+    borderRadius: 14,
+    padding: 14,
+    marginVertical: 12,
+    alignSelf: 'stretch',
+  } as ViewStyle,
+  interchangeTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 6,
+  } as TextStyle,
+  interchangeInstruction: {
+    fontSize: 15,
+    fontWeight: '700',
+    lineHeight: 20,
+    marginBottom: 6,
+  } as TextStyle,
+  platformBadge: {
+    fontSize: 14,
+    fontWeight: '800',
+    marginBottom: 8,
+  } as TextStyle,
+  interchangeAutoBox: {
+    marginTop: 8,
+    gap: 6,
+  } as ViewStyle,
+  interchangeAutoNotice: {
+    fontSize: 12,
+    fontStyle: 'italic',
+  } as TextStyle,
+  walkCard: {
+    borderWidth: 1.5,
+    borderRadius: 14,
+    padding: 14,
+    marginTop: 12,
+    alignSelf: 'stretch',
+  } as ViewStyle,
+  activeBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+    marginHorizontal: 16,
+    marginTop: 8,
+    borderRadius: 12,
+    borderWidth: 1.5,
+  } as ViewStyle,
+  activeBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  } as ViewStyle,
+  pulsingDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  } as ViewStyle,
+  activeBannerTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+  } as TextStyle,
+  activeBannerSub: {
+    fontSize: 11,
+    marginTop: 2,
+  } as TextStyle,
+  activeBannerAction: {
+    fontSize: 13,
+    fontWeight: '800',
+  } as TextStyle,
+  recoveryBox: {
+    borderWidth: 1.5,
+    borderRadius: 12,
+    padding: 12,
+    marginVertical: 10,
+    alignSelf: 'stretch',
+  } as ViewStyle,
+  recoveryTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    marginBottom: 4,
+  } as TextStyle,
+  recoveryMessage: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 8,
+  } as TextStyle,
+  recoveryDetails: {
+    gap: 6,
+    marginBottom: 6,
+  } as ViewStyle,
+  recoveryPlanText: {
+    fontSize: 13,
+    fontWeight: '700',
+  } as TextStyle,
+  splashContainer: {
+    paddingBottom: 24,
+  } as ViewStyle,
+  splashHero: {
+    alignItems: 'center',
+    marginBottom: 18,
+  } as ViewStyle,
+  metroIconRing: {
+    width: 88,
+    height: 88,
+    borderRadius: 24,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+    overflow: 'hidden',
+  } as ViewStyle,
+  splashHeroImg: {
+    width: 80,
+    height: 80,
+    borderRadius: 20,
+  } as ImageStyle,
+  splashTitle: {
+    fontSize: 26,
+    fontWeight: '900',
+    letterSpacing: 0.3,
+  } as TextStyle,
+  splashTagline: {
+    fontSize: 13,
+    textAlign: 'center',
+    marginTop: 4,
+    paddingHorizontal: 20,
+    lineHeight: 18,
+  } as TextStyle,
+  offlineBadge: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    marginTop: 8,
+  } as ViewStyle,
+  offlineBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+  } as TextStyle,
+  splashCard: {
+    borderWidth: 1.2,
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 14,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  } as ViewStyle,
+  splashCardHeading: {
+    fontSize: 17,
+    fontWeight: '800',
+    marginBottom: 8,
+  } as TextStyle,
+  splashFootActions: {
+    gap: 8,
+    marginTop: 10,
   } as ViewStyle,
 });
 

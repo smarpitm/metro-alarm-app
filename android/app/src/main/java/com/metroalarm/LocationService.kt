@@ -22,6 +22,9 @@ import com.facebook.react.modules.core.DeviceEventManagerModule
  */
 class LocationService : Service(), LocationListener {
 
+  private var currentMinTime: Long = 4000L
+  private var currentMinDistance: Float = 20f
+
   override fun onBind(intent: Intent?) = null
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -29,6 +32,12 @@ class LocationService : Service(), LocationListener {
       stopTracking()
       stopSelf()
       return START_NOT_STICKY
+    }
+    if (intent?.action == ACTION_UPDATE_POLICY) {
+      val minTime = intent.getLongExtra(EXTRA_MIN_TIME, currentMinTime)
+      val minDistance = intent.getFloatExtra(EXTRA_MIN_DISTANCE, currentMinDistance)
+      applyPolicy(minTime, minDistance)
+      return START_STICKY
     }
     val notification = buildNotification()
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
@@ -40,19 +49,27 @@ class LocationService : Service(), LocationListener {
     } else {
       startForeground(NOTIFICATION_ID, notification)
     }
-    requestUpdates()
+    applyPolicy(currentMinTime, currentMinDistance)
     running = true
     return START_STICKY
   }
 
-  private fun requestUpdates() {
+  private fun applyPolicy(minTime: Long, minDistance: Float) {
+    currentMinTime = minTime
+    currentMinDistance = minDistance
     val lm = getSystemService(LOCATION_SERVICE) as LocationManager
     try {
-      lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 12f, this, Looper.getMainLooper())
+      lm.removeUpdates(this)
     } catch (_: SecurityException) {
     }
     try {
-      lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 2000L, 30f, this, Looper.getMainLooper())
+      lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, minTime, minDistance, this, Looper.getMainLooper())
+    } catch (_: SecurityException) {
+    }
+    try {
+      val netTime = (minTime * 1.5).toLong().coerceAtLeast(3000L)
+      val netDist = (minDistance * 1.5f).coerceAtLeast(25f)
+      lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, netTime, netDist, this, Looper.getMainLooper())
     } catch (_: SecurityException) {
     }
   }
@@ -108,6 +125,9 @@ class LocationService : Service(), LocationListener {
 
   companion object {
     const val ACTION_STOP = "com.metroalarm.STOP_LOCATION"
+    const val ACTION_UPDATE_POLICY = "com.metroalarm.UPDATE_POLICY"
+    const val EXTRA_MIN_TIME = "min_time"
+    const val EXTRA_MIN_DISTANCE = "min_distance"
 
     private const val TRIP_CHANNEL_ID = "metro_trip"
     private const val NOTIFICATION_ID = 2
