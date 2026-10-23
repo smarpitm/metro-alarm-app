@@ -1,7 +1,7 @@
 import type { NetworkData, StationCoord } from '../metro/data';
 import { collectStationsWithCoords } from '../metro/data';
 import { planFastest, type Plan } from '../metro/planner';
-import { getPlatformGuidance, formatInterchangeInstruction } from '../metro/interchange';
+
 import { MetroAlarm } from '../native/MetroAlarm';
 
 /**
@@ -41,8 +41,6 @@ export interface InterchangeAlert {
   toLineId: string;
   toLineName: string;
   toAlightName: string;
-  platform?: string | null;
-  instruction: string;
   stopsUntil: number;
 }
 
@@ -55,6 +53,8 @@ export interface RecoveryAlert {
   reason: 'off_route' | 'wrong_direction';
   message: string;
 }
+
+export type AlarmAlertMode = 'sound' | 'vibration' | 'silent';
 
 export interface TripSnapshot {
   state: TripState;
@@ -74,6 +74,12 @@ export interface TripSnapshot {
   isDwelling?: boolean;
   /** battery optimization mode */
   batteryMode?: 'economy' | 'balanced' | 'approaching';
+  /** true when GPS fixes are lost/stale in underground tunnels, using scheduled dead-reckoning */
+  isUnderground?: boolean;
+  /** GPS tracking status */
+  gpsStatus?: 'gps' | 'underground' | 'searching';
+  /** alarm alert mode */
+  alertMode?: AlarmAlertMode;
 }
 
 interface InterchangePoint {
@@ -83,13 +89,13 @@ interface InterchangePoint {
   toLineId: string;
   toLineName: string;
   toAlightName: string;
-  platform: string | null;
   alerted: boolean;
 }
 
 const SNAP_RADIUS_M = 250;
 const ALARM_CONFIRMATIONS = 2;
 const ARRIVE_RADIUS_M = 180;
+const DWELL_TIMEOUT_MS = 38_000; // 38s standard platform dwell in Delhi Metro
 
 const R = 6371e3;
 export const hav = (a: Fix | { lat: number; lon: number }, b: { lat: number; lon: number }) => {
@@ -118,9 +124,16 @@ export class TripController {
   private state: TripState = 'idle';
   private bufferStops = 1;
   private fired = false;
+  private destinationAlarmDismissed = false;
+  private dismissedInterchangeStationIds = new Set<string>();
+  private alertMode: AlarmAlertMode = 'sound';
   private lastAnchorTs = 0;
   private lastMotionTs = 0;
+  private dwellStartTs = 0;
+  private lastFixTs = 0;
   private isDwelling = true;
+  private isUnderground = false;
+  private gpsStatus: 'gps' | 'underground' | 'searching' = 'searching';
   private ticker: ReturnType<typeof setInterval> | null = null;
   private snoozeTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -133,6 +146,7 @@ export class TripController {
   private recovery: RecoveryAlert | null = null;
   private allCoords: StationCoord[] = [];
   private batteryMode: 'economy' | 'balanced' | 'approaching' = 'balanced';
+  private currentPlan: Plan | null = null;
 
   private snapshot: TripSnapshot = {
     state: 'idle',
@@ -144,6 +158,9 @@ export class TripController {
     recovery: null,
     isDwelling: false,
     batteryMode: 'balanced',
+    isUnderground: false,
+    gpsStatus: 'searching',
+    alertMode: 'sound',
   };
 
   constructor(
@@ -172,7 +189,6 @@ export class TripController {
 
       if (nextLeg) {
         const interchangeStationIdx = this.route.length - 1;
-        const plat = getPlatformGuidance(leg.alightId, nextLeg.lineId, nextLeg.alightName);
         this.interchanges.push({
           routeIndex: interchangeStationIdx,
           stationId: leg.alightId,
@@ -180,7 +196,6 @@ export class TripController {
           toLineId: nextLeg.lineId,
           toLineName: nextLeg.lineName,
           toAlightName: nextLeg.alightName,
-          platform: plat,
           alerted: false,
         });
       }
@@ -190,15 +205,29 @@ export class TripController {
   /**
    * Plan the route for a station entered at and a destination, return station
    * pins for the UI lat/lon visibility, and switch to 'riding'.
+   * Can accept an explicit Plan (e.g. alternate interchange route selected by user).
    */
-  arm(opts: { enteredAtId: string; destId: string; bufferStops: number }): StationPin[] {
-    const plan: Plan | null = planFastest(this.network, opts.enteredAtId, opts.destId);
+  arm(opts: {
+    enteredAtId: string;
+    destId: string;
+    bufferStops: number;
+    plan?: Plan | null;
+    alertMode?: AlarmAlertMode;
+    now?: number;
+  }): StationPin[] {
+    const plan: Plan | null =
+      opts.plan ?? planFastest(this.network, opts.enteredAtId, opts.destId);
     if (!plan || plan.legs.length === 0) {
       throw new Error('No route found between the selected stations');
     }
 
+    const currentTs = opts.now ?? Date.now();
+    this.currentPlan = plan;
     this.enteredAtId = opts.enteredAtId;
     this.destId = opts.destId;
+    if (opts.alertMode) {
+      this.alertMode = opts.alertMode;
+    }
     this.buildRouteFromPlan(plan);
 
     const destStation = this.route.at(-1);
@@ -208,10 +237,16 @@ export class TripController {
     this.cursor = 0;
     this.confirmCount = 0;
     this.fired = false;
+    this.destinationAlarmDismissed = false;
+    this.dismissedInterchangeStationIds.clear();
     this.state = 'riding';
     this.isDwelling = true; // Started at origin station
-    this.lastAnchorTs = Date.now();
-    this.lastMotionTs = Date.now();
+    this.dwellStartTs = currentTs;
+    this.lastAnchorTs = currentTs;
+    this.lastMotionTs = currentTs;
+    this.lastFixTs = 0;
+    this.isUnderground = false;
+    this.gpsStatus = 'searching';
     this.offRouteCount = 0;
     this.wrongDirCount = 0;
     this.recovery = null;
@@ -227,23 +262,47 @@ export class TripController {
     return this.route;
   }
 
+  /** Set alarm alert mode ('sound' | 'vibration' | 'silent'). */
+  setAlertMode(mode: AlarmAlertMode) {
+    this.alertMode = mode;
+    MetroAlarm.setAlarmMode?.(mode).catch(() => {});
+    this.publish();
+  }
+
+  /** Manual departure trigger (e.g. if rider knows train departed underground). */
+  departNow() {
+    this.isDwelling = false;
+    this.lastMotionTs = Date.now();
+    this.publish();
+  }
+
   /** Feed a GPS fix (from MetroTripLocation events or a simulated replay). */
   onFix(fix: Fix) {
     if (this.state === 'idle' || this.state === 'done' || this.route.length === 0) return;
-    if (fix.accuracy > 80) return;
 
-    this.lastAnchorTs = fix.ts || Date.now();
+    // In underground/tunnel mode, cell tower accuracy can be up to 180m
+    const maxAccuracy = this.isUnderground ? 200 : 80;
+    if (fix.accuracy > maxAccuracy) return;
+
+    const now = fix.ts || Date.now();
+    this.lastFixTs = now;
+    this.lastAnchorTs = now;
+    this.isUnderground = false;
+    this.gpsStatus = 'gps';
 
     // Dwell vs Motion check
-    if (fix.speed >= 2.5) {
+    if (fix.speed >= 2.0) {
       // In motion between stations
       this.isDwelling = false;
-      this.lastMotionTs = fix.ts || Date.now();
+      this.lastMotionTs = now;
     } else if (fix.speed < 1.5) {
       // Stationary or low speed: check if near confirmed station or interchange
       const curPin = this.route[this.cursor];
       if (curPin && hav(fix, curPin) <= SNAP_RADIUS_M + 50) {
-        this.isDwelling = true;
+        if (!this.isDwelling) {
+          this.isDwelling = true;
+          this.dwellStartTs = now;
+        }
       }
     }
 
@@ -262,6 +321,7 @@ export class TripController {
       if (bestIdx > this.cursor) {
         this.cursor = bestIdx;
         this.isDwelling = true; // Just arrived at station; wait for departure
+        this.dwellStartTs = now;
         this.offRouteCount = 0;
         this.wrongDirCount = 0;
         this.rescheduleWatchdog();
@@ -278,8 +338,6 @@ export class TripController {
     }
 
     // 2. Automatic "Boarded next train" at interchange:
-    // If the rider is in 'interchanging' state, check if they have moved towards or reached
-    // the next leg's station automatically without needing manual tap.
     const activeIc = this.interchanges.find(ic => ic.routeIndex >= this.cursor);
     if ((this.state === 'interchanging' || this.state === 'interchange_alarm') && activeIc) {
       const nextLegFirstIdx = activeIc.routeIndex + 1;
@@ -295,7 +353,7 @@ export class TripController {
         ) {
           this.advanceInterchange();
           this.isDwelling = false;
-          this.lastMotionTs = fix.ts || Date.now();
+          this.lastMotionTs = now;
         }
       }
     }
@@ -377,8 +435,14 @@ export class TripController {
       if (this.cursor === nextIc.routeIndex || distToIc <= ARRIVE_RADIUS_M) {
         this.state = 'interchanging';
         this.isDwelling = true;
+        this.dwellStartTs = now;
         MetroAlarm.stopAlarm().catch(() => {});
-      } else if (!nextIc.alerted && stopsToIc <= this.bufferStops && distToIc < 2500) {
+      } else if (
+        !nextIc.alerted &&
+        !this.dismissedInterchangeStationIds.has(nextIc.stationId) &&
+        stopsToIc <= this.bufferStops &&
+        distToIc < 2500
+      ) {
         this.confirmCount += 1;
         if (this.confirmCount >= ALARM_CONFIRMATIONS) {
           this.triggerInterchangeAlarm(nextIc);
@@ -388,7 +452,12 @@ export class TripController {
       }
     } else {
       // 6. Destination alarm check (Distance as final metric)
-      if (!this.fired && stopsRemaining <= this.bufferStops && distToDest < 2500) {
+      if (
+        !this.fired &&
+        !this.destinationAlarmDismissed &&
+        stopsRemaining <= this.bufferStops &&
+        distToDest < 2500
+      ) {
         this.confirmCount += 1;
         if (this.confirmCount >= ALARM_CONFIRMATIONS) {
           this.triggerAlarm();
@@ -402,43 +471,81 @@ export class TripController {
   }
 
   /**
-   * Periodic tick for underground fallback when in active motion.
-   * If rider is dwelling/waiting at a station or interchange, tick pauses ETA
-   * decrement to avoid falsely advancing stops or firing alarms while stationary.
+   * Periodic tick for underground dead-reckoning and ETA updates.
+   * Handles underground tunnels where GPS is lost, advancing station-by-station
+   * on Delhi Metro timetable runtimes.
    */
   tick(now: number = Date.now()) {
     if ((this.state !== 'riding' && this.state !== 'interchanging') || this.route.length === 0) return;
 
-    // Requirement: "If somebody spends time at any station ya interchange wait for them to move to next station before changing the eta"
-    if (this.isDwelling) {
-      const totalRemainS = this.calculateRemainingEtaS(this.cursor);
-      const stopsFromCursor = this.route.length - 1 - this.cursor;
-      this.publish(stopsFromCursor, this.snapshot.distM ?? undefined, totalRemainS);
-      return;
+    // Detect underground / stale GPS: if no fix in last 15s (or ever), switch to underground dead-reckoning
+    if (this.lastFixTs === 0 || now - this.lastFixTs > 15_000) {
+      this.isUnderground = true;
+      this.gpsStatus = 'underground';
+    } else {
+      this.isUnderground = false;
+      this.gpsStatus = 'gps';
     }
 
-    const elapsedS = Math.max(0, Math.floor((now - (this.lastMotionTs || this.lastAnchorTs)) / 1000));
+    // Auto-dwell timeout: metro trains dwell for 30-45s at platforms, not indefinitely
+    if (this.isDwelling) {
+      if (now - this.dwellStartTs >= DWELL_TIMEOUT_MS) {
+        // Platform wait complete; train has departed into tunnel towards next station
+        this.isDwelling = false;
+        this.lastMotionTs = now;
+      } else {
+        // Still waiting at platform: hold ETA fixed
+        const totalRemainS = this.calculateRemainingEtaS(this.cursor);
+        const stopsFromCursor = this.route.length - 1 - this.cursor;
+        this.publish(stopsFromCursor, this.snapshot.distM ?? undefined, totalRemainS);
+        return;
+      }
+    }
+
+    // Motion in transit between stations
+    const elapsedSinceDepartureS = Math.max(0, Math.floor((now - this.lastMotionTs) / 1000));
+    const toNextStationS = this.route[this.cursor]?.toNextS ?? 150;
+
+    // Underground dead-reckoning: advance station cursor when inter-station time elapses
+    if (this.isUnderground && this.state === 'riding' && this.cursor < this.route.length - 1) {
+      if (elapsedSinceDepartureS >= toNextStationS) {
+        this.cursor += 1;
+        this.isDwelling = true;
+        this.dwellStartTs = now;
+        this.lastAnchorTs = now;
+        this.rescheduleWatchdog();
+
+        // Check if cursor advanced past an interchange
+        const activeIc = this.interchanges.find(ic => ic.routeIndex < this.cursor);
+        if (activeIc && (this.state === 'interchanging' || this.state === 'interchange_alarm')) {
+          this.state = 'riding';
+        }
+      }
+    }
+
     const totalRemainS = this.calculateRemainingEtaS(this.cursor);
-    const etaRemainS = Math.max(0, totalRemainS - elapsedS);
+    const etaRemainS = Math.max(0, totalRemainS - elapsedSinceDepartureS);
 
     // Underground fallback alarm when actively moving between stations
-    const nextIc = this.interchanges.find(ic => ic.routeIndex > this.cursor && !ic.alerted);
+    const nextIc = this.interchanges.find(ic => ic.routeIndex >= this.cursor && !ic.alerted);
     if (nextIc) {
-      const targetIdx = Math.max(this.cursor, nextIc.routeIndex - this.bufferStops);
-      let toBufferS = 0;
-      for (let i = this.cursor; i < targetIdx; i++) {
-        toBufferS += this.route[i].toNextS;
-      }
-      if (this.state === 'riding' && elapsedS >= toBufferS && toBufferS > 0) {
+      const stopsToIc = nextIc.routeIndex - this.cursor;
+      if (
+        !nextIc.alerted &&
+        !this.dismissedInterchangeStationIds.has(nextIc.stationId) &&
+        this.state === 'riding' &&
+        stopsToIc <= this.bufferStops
+      ) {
         this.triggerInterchangeAlarm(nextIc);
       }
     } else {
-      const targetIdx = Math.max(0, this.route.length - 1 - this.bufferStops);
-      let toBufferS = 0;
-      for (let i = this.cursor; i < targetIdx; i++) {
-        toBufferS += this.route[i].toNextS;
-      }
-      if (!this.fired && this.state === 'riding' && elapsedS >= toBufferS && toBufferS > 0) {
+      const stopsRemaining = this.route.length - 1 - this.cursor;
+      if (
+        !this.fired &&
+        !this.destinationAlarmDismissed &&
+        this.state === 'riding' &&
+        stopsRemaining <= this.bufferStops
+      ) {
         this.triggerAlarm();
       }
     }
@@ -448,7 +555,7 @@ export class TripController {
     const estStopsRemaining =
       totalRemainS > 0
         ? Math.max(0, (etaRemainS / totalRemainS) * stopsFromCursor)
-        : 0;
+        : stopsFromCursor;
 
     this.publish(estStopsRemaining, this.snapshot.distM ?? undefined, etaRemainS);
   }
@@ -491,6 +598,8 @@ export class TripController {
     this.cursor = 0;
     this.confirmCount = 0;
     this.fired = false;
+    this.destinationAlarmDismissed = false;
+    this.dismissedInterchangeStationIds.clear();
     this.offRouteCount = 0;
     this.wrongDirCount = 0;
     this.recovery = null;
@@ -534,16 +643,20 @@ export class TripController {
   }
 
   private triggerAlarm() {
+    if (this.destinationAlarmDismissed) return;
     this.fired = true;
     this.state = 'alarmed';
-    MetroAlarm.startAlarm().catch(() => {});
+    MetroAlarm.startAlarm(this.alertMode).catch(() => {});
   }
 
   private triggerInterchangeAlarm(ic?: InterchangePoint) {
-    if (ic) ic.alerted = true;
+    if (ic) {
+      if (this.dismissedInterchangeStationIds.has(ic.stationId)) return;
+      ic.alerted = true;
+    }
     this.confirmCount = 0;
     this.state = 'interchange_alarm';
-    MetroAlarm.startAlarm().catch(() => {});
+    MetroAlarm.startAlarm(this.alertMode).catch(() => {});
   }
 
   private rescheduleWatchdog() {
@@ -600,13 +713,29 @@ export class TripController {
     this.publish();
   }
 
-  /** Dismiss the alarm (UI button). */
+  /**
+   * Dismiss the alarm (UI button or native full-screen lock screen Dismiss).
+   * Once dismissed, the alarm for this milestone (destination or interchange)
+   * will NEVER re-trigger again.
+   */
   dismiss() {
-    if (this.state === 'alarmed' || this.state === 'interchange_alarm') {
-      MetroAlarm.stopAlarm().catch(() => {});
-      MetroAlarm.cancelScheduledAlarm().catch(() => {});
-      if (this.snoozeTimer) clearTimeout(this.snoozeTimer);
-      this.state = this.state === 'interchange_alarm' ? 'interchanging' : 'riding';
+    MetroAlarm.stopAlarm().catch(() => {});
+    MetroAlarm.cancelScheduledAlarm().catch(() => {});
+    if (this.snoozeTimer) {
+      clearTimeout(this.snoozeTimer);
+      this.snoozeTimer = null;
+    }
+
+    if (this.state === 'alarmed') {
+      this.destinationAlarmDismissed = true;
+      this.state = 'riding';
+      this.publish();
+    } else if (this.state === 'interchange_alarm') {
+      const activeIc = this.interchanges.find(ic => ic.alerted && ic.routeIndex >= this.cursor);
+      if (activeIc) {
+        this.dismissedInterchangeStationIds.add(activeIc.stationId);
+      }
+      this.state = 'interchanging';
       this.publish();
     }
   }
@@ -634,10 +763,15 @@ export class TripController {
     this.route = [];
     this.interchanges = [];
     this.fired = false;
+    this.destinationAlarmDismissed = false;
+    this.dismissedInterchangeStationIds.clear();
     this.recovery = null;
     this.offRouteCount = 0;
     this.wrongDirCount = 0;
     this.isDwelling = false;
+    this.isUnderground = false;
+    this.gpsStatus = 'searching';
+    this.currentPlan = null;
     this.stopTicker();
     MetroAlarm.cancelScheduledAlarm().catch(() => {});
     MetroAlarm.stopAlarm().catch(() => {});
@@ -700,13 +834,6 @@ export class TripController {
         toLineId: nextIc.toLineId,
         toLineName: nextIc.toLineName,
         toAlightName: nextIc.toAlightName,
-        platform: nextIc.platform,
-        instruction: formatInterchangeInstruction({
-          stationName: nextIc.stationName,
-          toLineName: nextIc.toLineName,
-          toAlightName: nextIc.toAlightName,
-          platform: nextIc.platform,
-        }),
         stopsUntil: Math.max(0, nextIc.routeIndex - this.cursor),
       };
     }
@@ -721,7 +848,22 @@ export class TripController {
       recovery: this.recovery,
       isDwelling: this.isDwelling,
       batteryMode: this.batteryMode,
+      isUnderground: this.isUnderground,
+      gpsStatus: this.gpsStatus,
+      alertMode: this.alertMode,
     };
     this.onState(this.snapshot);
+  }
+
+  /** Manual station sync if train was delayed or user wants to sync station in tunnel. */
+  advanceStation() {
+    if (this.cursor < this.route.length - 1) {
+      this.cursor += 1;
+      this.isDwelling = true;
+      this.dwellStartTs = Date.now();
+      this.lastMotionTs = Date.now();
+      this.rescheduleWatchdog();
+      this.publish();
+    }
   }
 }

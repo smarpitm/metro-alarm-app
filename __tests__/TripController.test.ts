@@ -204,8 +204,6 @@ describe('TripController (overview replay)', () => {
     expect(initialSnap.etaS).toBeGreaterThanOrEqual(delhiNetwork.transferPenaltyS);
     expect(initialSnap.interchange).not.toBeNull();
     expect(initialSnap.interchange?.stationId).toBe('mandi-house');
-    expect(initialSnap.interchange?.platform).toBe('Platform 2');
-    expect(initialSnap.interchange?.instruction).toContain('Change at Mandi House');
 
     // Replay fixes up to 1 stop before Mandi House (Janpath)
     for (const fix of replay(route, mandiIdx - 1)) {
@@ -346,6 +344,101 @@ describe('TripController (overview replay)', () => {
     const nearDest = route[route.length - 2];
     trip.onFix({ lat: nearDest.lat, lon: nearDest.lon, accuracy: 10, speed: 5, ts: 1_760_005_000_000 });
     expect(MetroAlarm.setTrackingMode).toHaveBeenCalledWith('approaching');
+
+    trip.cancel();
+  });
+
+  it('never re-triggers the alarm once dismissed by the user', () => {
+    const states: TripSnapshot[] = [];
+    const trip = new TripController(delhiNetwork, s => states.push({ ...s }));
+    const route = trip.arm({ enteredAtId: 'dwarka-sector-21', destId: 'vaishali', bufferStops: 1 });
+
+    // Trigger destination alarm
+    const atDestMinus1 = route.length - 2;
+    for (const fix of replay(route, atDestMinus1)) {
+      trip.onFix(fix);
+    }
+    expect(trip.currentState.state).toBe('alarmed');
+    expect(MetroAlarm.startAlarm).toHaveBeenCalledTimes(1);
+
+    // User dismisses the alarm
+    trip.dismiss();
+    expect(trip.currentState.state).toBe('riding');
+    expect(MetroAlarm.cancelScheduledAlarm).toHaveBeenCalled();
+
+    // Rider receives subsequent fixes at the same or next station
+    const destPin = route[route.length - 1];
+    trip.onFix({ lat: destPin.lat, lon: destPin.lon, accuracy: 5, speed: 10, ts: 1_760_010_000_000 });
+    trip.tick(1_760_010_005_000);
+
+    // startAlarm must NOT have been called again!
+    expect(MetroAlarm.startAlarm).toHaveBeenCalledTimes(1);
+    expect(trip.currentState.state).not.toBe('alarmed');
+
+    trip.cancel();
+  });
+
+  it('arms with a custom alternate interchange plan', () => {
+    const { planAlternates } = require('../src/metro/planner');
+    const plans = planAlternates(delhiNetwork, 'noida-sector-18', 'hauz-khas');
+    expect(plans.length).toBeGreaterThanOrEqual(1);
+
+    const trip = new TripController(delhiNetwork, () => {});
+    const selectedPlan = plans[0];
+    const route = trip.arm({
+      enteredAtId: 'noida-sector-18',
+      destId: 'hauz-khas',
+      bufferStops: 1,
+      plan: selectedPlan,
+    });
+
+    expect(route[0].id).toBe('noida-sector-18');
+    expect(route.at(-1)!.id).toBe('hauz-khas');
+    trip.cancel();
+  });
+
+  it('respects silent alert mode when firing alarms', () => {
+    const trip = new TripController(delhiNetwork, () => {});
+    const route = trip.arm({
+      enteredAtId: 'dwarka-sector-21',
+      destId: 'vaishali',
+      bufferStops: 1,
+      alertMode: 'silent',
+    });
+
+    const atDestMinus1 = route.length - 2;
+    for (const fix of replay(route, atDestMinus1)) {
+      trip.onFix(fix);
+    }
+
+    expect(trip.currentState.state).toBe('alarmed');
+    expect(MetroAlarm.startAlarm).toHaveBeenCalledWith('silent');
+    trip.cancel();
+  });
+
+  it('activates underground dead-reckoning when GPS fixes are lost and auto-departs platform', () => {
+    const states: TripSnapshot[] = [];
+    const trip = new TripController(delhiNetwork, s => states.push({ ...s }));
+    const startTime = 1_760_000_000_000;
+    const route = trip.arm({
+      enteredAtId: 'rajiv-chowk',
+      destId: 'chandni-chowk',
+      bufferStops: 1,
+      now: startTime,
+    });
+    // Initial state: dwelling at origin platform
+    expect(trip.currentState.isDwelling).toBe(true);
+
+    // 45 seconds later, underground with zero GPS fixes: train has departed platform
+    trip.tick(startTime + 45_000);
+    expect(trip.currentState.isDwelling).toBe(false);
+    expect(trip.currentState.isUnderground).toBe(true);
+    expect(trip.currentState.gpsStatus).toBe('underground');
+
+    // Run time from first station to second station elapses
+    trip.tick(startTime + 45_000 + (route[0].toNextS + 5) * 1000);
+    // Cursor advances to next underground station
+    expect(trip.currentState.lastStation).toBe(route[1].name);
 
     trip.cancel();
   });

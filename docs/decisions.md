@@ -5,6 +5,33 @@ Newest entries at the top. Keep entries small and factual; avoid re-litigating.
 
 ---
 
+## D-010 · Alternate Interchange Routing, Underground Dead-Reckoning, Alert Modes, and Persistent Alarm Dismissal
+
+**Date:** Oct 2026 · **Status:** implemented
+
+- **Decision:**
+  1. Add `planAlternates` routing engine to calculate and present alternative paths that route riders through alternative transfer stations (e.g. Mandi House vs Rajiv Chowk vs Botanical Garden) with clear interchange summaries.
+  2. Implement an auto-departure timeout (38s) and inter-station timetable dead-reckoning progression during GPS blockage inside underground metro tunnels, paired with manual "Train Departed" / "Next Station" overrides so alarms trigger accurately underground without internet or GPS.
+  3. Support 3 distinct Alarm Alert Modes (`sound`, `vibration`, `silent`) across native Android (`AlarmService` silent notification channel, custom vibrator patterns) and React Native UI.
+  4. Fix repeated alarm retriggering by explicitly cancelling native `AlarmManager` watchdog pending intents, saving a persistent dismissal timestamp in SharedPreferences with grace period suppression, and emitting `MetroAlarmDismissed` to React Native `TripController`.
+  5. Enhance station picker and route planner UX with clear station buttons (`✕ Clear`), bidirectional swapping (`⇅ Swap`), quick-select Metro hub chips, and continuous editable queries.
+- **Why:** Metro riders underground experience physical GPS occlusion and need dead-reckoned stops; passengers often prefer less congested or alternate interchange stations; silent/vibrate alert modes prevent public embarrassment; and alarm retriggering after manual dismissal causes frustration.
+- **Alternatives rejected:** Waiting for GPS in underground tunnels (causes infinite dwell freezes); single-route constraint (forces riders through crowded stations without choice); pure software vibration (killed by Android Doze).
+- **Consequences:** All routing, scheduling, and alarms remain 100% offline with zero network latency.
+
+---
+
+## D-009 · Inter-station times: distance-derived estimates now, measured medians in P0
+
+**Date:** Oct 2026 · **Status:** implemented (first cut) — `tools/data-prep/build-network.mjs` generates per-station `toNextS` via `DWELL + great-circle-distance / V_EFF`; `PLACEHOLDER = 160 s` for termini or missing coordinates.
+
+- **Decision:** Ship the offline data pack with distance-derived inter-station time estimates (`DWELL = 30 s`, `V_EFF = 7.7 m/s ≈ 27.7 km/h`) rather than waiting for measured median ride times.
+- **Why:** OSM route relations give station order + GPS coordinates but not schedules or dwell times. A Delhi Metro GTFS feed with `stop_times` is not confirmed public/licensable for offline bundling, and scraped DMRC timetables are fragile. Distance-derived estimates give every segment a nonzero, self-consistent travel time so the Dijkstra planner and the alarm's ETA math work immediately; they can be swapped in place once P0 rides collect real medians.
+- **Alternatives rejected:** waiting for P0 ride data before shipping any pack (blocks the planner and alarm until field collection is done); DMRC/GTFS `stop_times` import (no confirmed public GTFS for Delhi Metro; licensing fragility); hand-typing per-segment minutes (~50 stations × error-prone manual entry).
+- **Consequences:** alarm ETA and route-planner `timeS` are estimates until P0 rides replace them; the ETA-clock fallback and underground dead-reckoning inherit this error. Downside is bounded: segment-level error of ±30–60 s averages out across a 30+ stop trip, and the alarm's stop-counting trigger does not depend on absolute seconds.
+
+---
+
 ## D-008 · Route planner computed on-device, two rankings (time & transfers)
 **Date:** Oct 2026 · **Status:** implemented — engine + minimal UI + local debug APK (route planner first cut)
 

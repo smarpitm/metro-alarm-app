@@ -25,7 +25,7 @@ you are along your journey*.
 
 ### MVP scope decision (Oct 2026)
 
-**MVP targets the Delhi Metro Blue Line only.**
+**The offline data pack covers all Delhi Metro lines; MVP alarm path is validated on the Blue Line.**
 
 - One offline station table (station list in order, GPS anchors, inter-station times)
 - Both branches: Dwarka Sector 21 ↔ Noida Electronic City and Yamuna Bank ↔ Vaishali

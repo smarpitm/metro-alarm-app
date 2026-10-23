@@ -54,17 +54,29 @@ describe('route planner (D-008)', () => {
   // Real Blue Line v0 data (placeholder times, verified ORDER of what matters here:
   // branch graphs share Yamuna Bank and must route as one line, zero changes)
   describe('blue line v0 data pack', () => {
+    const { delhiNetwork } = require('../delhiNetwork');
     test('Dwarka 21 → Noida Electronic City crosses the Yamuna Bank split with 0 changes', () => {
-      const fast = planFastest(require('../data').blueLineNetwork, 'dwarka-sector-21', 'noida-electronic-city');
+      const fast = planFastest(delhiNetwork, 'dwarka-sector-21', 'noida-electronic-city');
       expect(fast!.changes).toBe(0);
       expect(fast!.legs).toHaveLength(1);
       expect(fast!.stationCount).toBe(50); // 34 trunk + 17 noida − shared Yamuna Bank
     });
 
     test('Vaishali → Tagore Garden also stays on one leg', () => {
-      const fast = planFastest(require('../data').blueLineNetwork, 'vaishali', 'tagore-garden');
+      const fast = planFastest(delhiNetwork, 'vaishali', 'tagore-garden');
       expect(fast!.changes).toBe(0);
       expect(fast!.stationCount).toBe(24); // 8 vaishali + 34−17 trunk + shared Yamuna Bank
+    });
+
+    test('planAlternates returns valid routes and alternate interchanges if available', () => {
+      const { planAlternates } = require('../planner');
+      const alternates = planAlternates(delhiNetwork, 'noida-sector-18', 'hauz-khas');
+      expect(alternates.length).toBeGreaterThanOrEqual(1);
+      for (const p of alternates) {
+        expect(p.legs.length).toBeGreaterThan(0);
+        expect(p.legs[0].boardId).toBe('noida-sector-18');
+        expect(p.legs[p.legs.length - 1].alightId).toBe('hauz-khas');
+      }
     });
   });
 });

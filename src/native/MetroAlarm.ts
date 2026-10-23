@@ -10,8 +10,12 @@ import { NativeModules } from 'react-native';
 interface MetroAlarmNative {
   /** Ask for POST_NOTIFICATIONS on Android 13+; call once before first startAlarm. */
   requestNotificationPermission(): Promise<boolean>;
-  /** Fire the alarm now (looping sound + vibration + full-screen wake-up). */
-  startAlarm(): Promise<boolean>;
+  /** Fire the alarm now (sound/vibration/silent + full-screen wake-up). */
+  startAlarm(mode?: 'sound' | 'vibration' | 'silent'): Promise<boolean>;
+  /** Fire alarm with explicit mode ('sound' | 'vibration' | 'silent'). */
+  startAlarmWithMode(mode: 'sound' | 'vibration' | 'silent'): Promise<boolean>;
+  /** Set persistent alarm mode preference ('sound' | 'vibration' | 'silent'). */
+  setAlarmMode(mode: 'sound' | 'vibration' | 'silent'): Promise<boolean>;
   /** Stop the alarm service. */
   stopAlarm(): Promise<boolean>;
   isRinging(): Promise<boolean>;
@@ -37,24 +41,20 @@ interface MetroAlarmNative {
 
 const native = NativeModules.MetroAlarm as MetroAlarmNative | undefined;
 
-// In-memory fallback for test/dev/mock environments
-const fallbackStore = new Map<string, string>();
-
-export const MetroAlarm: MetroAlarmNative =
-  native ??
-  new Proxy({} as MetroAlarmNative, {
-    get(_, prop: string) {
-      if (prop === 'saveString') {
-        return (key: string, val: string) => {
-          fallbackStore.set(key, val);
-          return Promise.resolve(true);
-        };
-      }
-      if (prop === 'getString') {
-        return (key: string) => {
-          return Promise.resolve(fallbackStore.get(key) ?? null);
-        };
-      }
-      return () => Promise.resolve(false);
-    },
-  });
+export const MetroAlarm: MetroAlarmNative = native ?? {
+  requestNotificationPermission: () => Promise.resolve(false),
+  startAlarm: (_mode?: 'sound' | 'vibration' | 'silent') => Promise.resolve(false),
+  startAlarmWithMode: (_mode: 'sound' | 'vibration' | 'silent') => Promise.resolve(false),
+  setAlarmMode: (_mode: 'sound' | 'vibration' | 'silent') => Promise.resolve(false),
+  stopAlarm: () => Promise.resolve(false),
+  isRinging: () => Promise.resolve(false),
+  requestLocationPermission: () => Promise.resolve(false),
+  startLocationUpdates: () => Promise.resolve(false),
+  stopLocationUpdates: () => Promise.resolve(false),
+  setTrackingMode: () => Promise.resolve(false),
+  scheduleAlarm: () => Promise.resolve(false),
+  cancelScheduledAlarm: () => Promise.resolve(false),
+  getLastKnownLocation: () => Promise.resolve(null),
+  saveString: () => Promise.resolve(false),
+  getString: () => Promise.resolve(null),
+};

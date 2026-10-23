@@ -18,9 +18,17 @@ export interface Plan {
   timeS: number;
   changes: number;
   stationCount: number;
+  /** Human-readable interchange summary e.g. 'Direct' or 'Via Rajiv Chowk' */
+  interchangeSummary?: string;
+  /** Label for UI presentation */
+  label?: string;
 }
 
 export type PlanMode = 'fastest' | 'leastChanges';
+
+export interface PlanOptions {
+  avoidInterchanges?: string[];
+}
 
 interface Cost {
   time: number;
@@ -44,6 +52,7 @@ export function plan(
   originId: string,
   destId: string,
   mode: PlanMode,
+  options?: PlanOptions,
 ): Plan | null {
   if (originId === destId) {
     return { legs: [], timeS: 0, changes: 0, stationCount: 1 };
@@ -64,6 +73,10 @@ export function plan(
     }
   }
 
+  const avoidSet = options?.avoidInterchanges && options.avoidInterchanges.length > 0
+    ? new Set(options.avoidInterchanges)
+    : null;
+
   while (queue.length > 0) {
     let best = 0;
     for (let i = 1; i < queue.length; i++) {
@@ -77,7 +90,14 @@ export function plan(
     }
     done.add(node);
 
+    const fromNodeInfo = graph.nodes.get(node);
+
     for (const edge of graph.adj.get(node) ?? []) {
+      // If user wants to avoid transferring at this station:
+      if (edge.transfer && !edge.sameLine && avoidSet && fromNodeInfo && avoidSet.has(fromNodeInfo.stationId)) {
+        continue;
+      }
+
       const changes = cost.changes + (edge.transfer && !edge.sameLine ? 1 : 0);
       const cand: Cost = { time: cost.time + edge.timeS, changes };
       const cur = dist.get(edge.to);
@@ -123,6 +143,11 @@ export function plan(
   const legs: Leg[] = [];
   let chunkStart = 0;
   let chunkTime = 0;
+  const lineNames = new Map<string, string>();
+  for (const node of graph.nodes.values()) {
+    lineNames.set(node.lineId, node.lineId.toUpperCase().charAt(0) + node.lineId.slice(1) + ' Line');
+  }
+
   const flush = (endIdx: number) => {
     const chunk = nodeKeys.slice(chunkStart, endIdx + 1).map(k => graph.nodes.get(k)!);
     // dedupe consecutive duplicates (branch junction is one physical station)
@@ -147,11 +172,6 @@ export function plan(
     });
   };
 
-  const lineNames = new Map<string, string>();
-  for (const node of graph.nodes.values()) {
-    lineNames.set(node.lineId, node.lineId.toUpperCase().charAt(0) + node.lineId.slice(1) + ' Line');
-  }
-
   for (let i = 0; i < edgeList.length; i++) {
     chunkTime += edgeList[i].timeS;
     if (edgeList[i].transfer && !edgeList[i].sameLine) {
@@ -166,11 +186,18 @@ export function plan(
     legs.flatMap(leg => leg.stations.map(x => x.id)),
   ).size;
 
+  const transferNames = legs.slice(0, -1).map(leg => leg.alightName);
+  const interchangeSummary =
+    transferNames.length === 0
+      ? 'Direct (No interchange)'
+      : `Via ${transferNames.join(' ➔ ')}`;
+
   return {
     legs,
     timeS: goalCost.time,
     changes: goalCost.changes,
     stationCount,
+    interchangeSummary,
   };
 }
 
@@ -178,14 +205,86 @@ export function planFastest(
   network: NetworkData,
   originId: string,
   destId: string,
+  options?: PlanOptions,
 ): Plan | null {
-  return plan(network, originId, destId, 'fastest');
+  const p = plan(network, originId, destId, 'fastest', options);
+  if (p && originId !== destId) p.label = '⚡ Fastest Route';
+  return p;
 }
 
 export function planLeastChanges(
   network: NetworkData,
   originId: string,
   destId: string,
+  options?: PlanOptions,
 ): Plan | null {
-  return plan(network, originId, destId, 'leastChanges');
+  const p = plan(network, originId, destId, 'leastChanges', options);
+  if (p && originId !== destId) p.label = '🔄 Fewest Transfers';
+  return p;
+}
+
+/**
+ * Finds alternative routes with different interchange options.
+ * Allows rider to pick a different transfer station (e.g. Mandi House vs Rajiv Chowk).
+ */
+export function planAlternates(
+  network: NetworkData,
+  originId: string,
+  destId: string,
+  maxAlternates: number = 3,
+): Plan[] {
+  if (originId === destId) return [];
+
+  const results: Plan[] = [];
+  const planSignature = (p: Plan) =>
+    p.legs.map(l => `${l.lineId}@${l.alightId}`).join('|');
+  const seenSignatures = new Set<string>();
+
+  const fastest = planFastest(network, originId, destId);
+  if (fastest) {
+    results.push(fastest);
+    seenSignatures.add(planSignature(fastest));
+  }
+
+  const leastChanges = planLeastChanges(network, originId, destId);
+  if (leastChanges) {
+    const sig = planSignature(leastChanges);
+    if (!seenSignatures.has(sig)) {
+      results.push(leastChanges);
+      seenSignatures.add(sig);
+    }
+  }
+
+  // Extract all transfer station IDs that occurred in primary plans
+  const primaryInterchanges = new Set<string>();
+  for (const p of results) {
+    for (let i = 0; i < p.legs.length - 1; i++) {
+      primaryInterchanges.add(p.legs[i].alightId);
+    }
+  }
+
+  // For each interchange station used in primary paths, calculate routes avoiding it
+  for (const avoidStationId of primaryInterchanges) {
+    if (results.length >= maxAlternates + 2) break;
+
+    for (const mode of ['fastest', 'leastChanges'] as PlanMode[]) {
+      const alt = plan(network, originId, destId, mode, {
+        avoidInterchanges: [avoidStationId],
+      });
+      if (alt && alt.legs.length > 0) {
+        const sig = planSignature(alt);
+        if (!seenSignatures.has(sig)) {
+          // Reject if absurdly slower (> 1.7x fastest or > 40 min longer)
+          if (!fastest || alt.timeS <= fastest.timeS * 1.7 + 1800) {
+            alt.label = `🔄 Alternate Interchange (${alt.interchangeSummary})`;
+            seenSignatures.add(sig);
+            results.push(alt);
+            if (results.length >= maxAlternates + 2) break;
+          }
+        }
+      }
+    }
+  }
+
+  return results;
 }

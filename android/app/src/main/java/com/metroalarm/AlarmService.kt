@@ -29,6 +29,7 @@ import android.os.VibratorManager
 class AlarmService : Service() {
 
   private var player: MediaPlayer? = null
+  private var currentMode: String = "sound"
 
   override fun onBind(intent: Intent?): IBinder? = null
 
@@ -39,8 +40,20 @@ class AlarmService : Service() {
       return START_NOT_STICKY
     }
 
-    startRinging()
-    val notification = buildNotification()
+    // Check if dismissed within the last 15 seconds to prevent stray watchdog re-triggering
+    val prefs = getSharedPreferences("metro_alarm_prefs", Context.MODE_PRIVATE)
+    val lastDismissed = prefs.getLong("last_dismissed_ts", 0L)
+    if (System.currentTimeMillis() - lastDismissed < 15_000L) {
+      stopSelf()
+      return START_NOT_STICKY
+    }
+
+    currentMode = intent?.getStringExtra(EXTRA_ALARM_MODE)
+      ?: prefs.getString("metro_alarm_mode", "sound")
+      ?: "sound"
+
+    startRinging(currentMode)
+    val notification = buildNotification(currentMode)
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
       startForeground(NOTIFICATION_ID, notification,
         android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
@@ -50,42 +63,61 @@ class AlarmService : Service() {
     return START_STICKY
   }
 
-  private fun startRinging() {
+  private fun startRinging(mode: String) {
     if (player?.isPlaying == true) return
     isRinging = true
 
     // Sound: default system alarm tone, looping, on the alarm stream (overrides media volume)
-    try {
-      val uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-        ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
-      val p = MediaPlayer()
-      player = p
-      p.setDataSource(this, uri)
-      p.setAudioAttributes(
-        AudioAttributes.Builder()
-          .setUsage(AudioAttributes.USAGE_ALARM)
-          .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-          .build(),
-      )
-      p.isLooping = true
-      p.prepare()
-      p.start()
-    } catch (e: Exception) {
-      // No usable alarm tone — vibration alone still wakes the rider up.
-      player = null
+    // Only played if mode is 'sound'
+    if (mode == "sound") {
+      try {
+        val uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+          ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+        val p = MediaPlayer()
+        player = p
+        p.setDataSource(this, uri)
+        p.setAudioAttributes(
+          AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_ALARM)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build(),
+        )
+        p.isLooping = true
+        p.prepare()
+        p.start()
+      } catch (e: Exception) {
+        // No usable alarm tone — fallback
+        player = null
+      }
     }
 
-    // Vibration: repeating pump-pause pattern, coarse so Doze can't throttle audio to silence
-    try {
-      val vib = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        (getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
-      } else {
-        @Suppress("DEPRECATION")
-        getSystemService(VIBRATOR_SERVICE) as Vibrator
+    // Vibration: repeating pump-pause pattern (sound & vibration modes)
+    if (mode == "sound" || mode == "vibration") {
+      try {
+        val vib = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+          (getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
+        } else {
+          @Suppress("DEPRECATION")
+          getSystemService(VIBRATOR_SERVICE) as Vibrator
+        }
+        val pattern = longArrayOf(0, 800, 800)
+        vib.vibrate(VibrationEffect.createWaveform(pattern, 0))
+      } catch (_: Exception) {
       }
-      val pattern = longArrayOf(0, 800, 800)
-      vib.vibrate(VibrationEffect.createWaveform(pattern, 0))
-    } catch (_: Exception) {
+    } else if (mode == "silent") {
+      // In silent mode: single gentle tap haptic on start, no continuous loud buzzer
+      try {
+        val vib = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+          (getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
+        } else {
+          @Suppress("DEPRECATION")
+          getSystemService(VIBRATOR_SERVICE) as Vibrator
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+          vib.vibrate(VibrationEffect.createOneShot(150, VibrationEffect.DEFAULT_AMPLITUDE))
+        }
+      } catch (_: Exception) {
+      }
     }
   }
 
@@ -109,20 +141,35 @@ class AlarmService : Service() {
     }
   }
 
-  private fun buildNotification(): Notification {
+  private fun buildNotification(mode: String): Notification {
     val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+    val channelId = if (mode == "silent") CHANNEL_ID_SILENT else CHANNEL_ID
+
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-      val channel = NotificationChannel(
-        CHANNEL_ID,
-        "Metro alarm",
-        NotificationManager.IMPORTANCE_HIGH,
-      )
-      channel.enableVibration(true)
-      notificationManager.createNotificationChannel(channel)
+      if (mode == "silent") {
+        val silentChannel = NotificationChannel(
+          CHANNEL_ID_SILENT,
+          "Metro alarm (Silent)",
+          NotificationManager.IMPORTANCE_HIGH,
+        ).apply {
+          setSound(null, null)
+          enableVibration(false)
+        }
+        notificationManager.createNotificationChannel(silentChannel)
+      } else {
+        val channel = NotificationChannel(
+          CHANNEL_ID,
+          "Metro alarm",
+          NotificationManager.IMPORTANCE_HIGH,
+        )
+        channel.enableVibration(true)
+        notificationManager.createNotificationChannel(channel)
+      }
     }
 
     // Full-screen intent: launches AlarmActivity even when the screen is locked.
     val activityIntent = Intent(this, AlarmActivity::class.java)
+      .putExtra(EXTRA_ALARM_MODE, mode)
       .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     val fullScreenIntent = PendingIntent.getActivity(
       this,
@@ -132,22 +179,26 @@ class AlarmService : Service() {
     )
 
     val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-      Notification.Builder(this, CHANNEL_ID)
+      Notification.Builder(this, channelId)
     } else {
       Notification.Builder(this)
     }
+
+    val subtitle = when (mode) {
+      "silent" -> "Silent alert: Time to get ready to get off!"
+      "vibration" -> "Vibration alert: Time to get ready to get off!"
+      else -> "Time to get ready to get off!"
+    }
+
     builder
       .setContentTitle("Metro alarm")
-      .setContentText("Time to get ready to get off!")
-      // ponytail: stock platform icon; swap for a real asset when we brand the app
+      .setContentText(subtitle)
       .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
       .setPriority(Notification.PRIORITY_MAX)
       .setCategory(Notification.CATEGORY_ALARM)
       .setOngoing(true)
       .setFullScreenIntent(fullScreenIntent, true)
-
-    // Expandable fallback: tap the notification itself if the full-screen launch was denied.
-    builder.setContentIntent(fullScreenIntent)
+      .setContentIntent(fullScreenIntent)
 
     return builder.build()
   }
@@ -159,8 +210,10 @@ class AlarmService : Service() {
 
   companion object {
     const val ACTION_STOP = "com.metroalarm.STOP_ALARM"
+    const val EXTRA_ALARM_MODE = "alarm_mode"
 
     private const val CHANNEL_ID = "metro_alarm"
+    private const val CHANNEL_ID_SILENT = "metro_alarm_silent"
     private const val NOTIFICATION_ID = 1
 
     /** Static so JS-side isRinging works without binding to the service. */
@@ -168,8 +221,12 @@ class AlarmService : Service() {
     var isRinging: Boolean = false
       private set
 
-    fun start(context: Context) {
-      val intent = Intent(context, AlarmService::class.java)
+    fun start(context: Context, mode: String? = null) {
+      val intent = Intent(context, AlarmService::class.java).apply {
+        if (mode != null) {
+          putExtra(EXTRA_ALARM_MODE, mode)
+        }
+      }
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         context.startForegroundService(intent)
       } else {

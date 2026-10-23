@@ -16,6 +16,7 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.modules.core.DeviceEventManagerModule
 
 /**
  * Native alarm control surface for JS (D-006).
@@ -35,6 +36,36 @@ class MetroAlarmModule(private val reactContext: ReactApplicationContext) :
     /** Used by LocationService to emit events; set when the module initializes. */
     @JvmStatic
     var appContext: ReactApplicationContext? = null
+
+    @JvmStatic
+    fun cancelWatchdogAlarm(context: Context) {
+      try {
+        val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(context, AlarmService::class.java)
+        val pi = PendingIntent.getService(
+          context,
+          SCHEDULE_REQUEST_CODE,
+          intent,
+          PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE,
+        )
+        if (pi != null) {
+          am.cancel(pi)
+          pi.cancel()
+        }
+      } catch (_: Exception) {
+      }
+    }
+
+    @JvmStatic
+    fun notifyAlarmDismissed(context: Context) {
+      cancelWatchdogAlarm(context)
+      try {
+        appContext
+          ?.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+          ?.emit("MetroAlarmDismissed", null)
+      } catch (_: Exception) {
+      }
+    }
   }
 
   init {
@@ -58,9 +89,32 @@ class MetroAlarmModule(private val reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
+  fun setAlarmMode(mode: String, promise: Promise) {
+    try {
+      val prefs = reactContext.getSharedPreferences("metro_alarm_prefs", Context.MODE_PRIVATE)
+      prefs.edit().putString("metro_alarm_mode", mode).apply()
+      promise.resolve(true)
+    } catch (e: Exception) {
+      promise.reject("SET_MODE_FAILED", e.message, e)
+    }
+  }
+
+  @ReactMethod
+  fun startAlarmWithMode(mode: String, promise: Promise) {
+    try {
+      AlarmService.start(reactContext.applicationContext, mode)
+      promise.resolve(true)
+    } catch (e: Exception) {
+      promise.reject("ALARM_START_FAILED", e.message, e)
+    }
+  }
+
+  @ReactMethod
   fun startAlarm(promise: Promise) {
     try {
-      AlarmService.start(reactContext.applicationContext)
+      val prefs = reactContext.getSharedPreferences("metro_alarm_prefs", Context.MODE_PRIVATE)
+      val mode = prefs.getString("metro_alarm_mode", "sound")
+      AlarmService.start(reactContext.applicationContext, mode)
       promise.resolve(true)
     } catch (e: Exception) {
       promise.reject("ALARM_START_FAILED", e.message, e)
@@ -71,6 +125,7 @@ class MetroAlarmModule(private val reactContext: ReactApplicationContext) :
   fun stopAlarm(promise: Promise) {
     try {
       val context = reactContext.applicationContext
+      cancelWatchdogAlarm(context)
       context.startService(
         Intent(context, AlarmService::class.java).setAction(AlarmService.ACTION_STOP),
       )
@@ -168,7 +223,11 @@ class MetroAlarmModule(private val reactContext: ReactApplicationContext) :
     try {
       val context = reactContext.applicationContext
       val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-      val intent = Intent(context, AlarmService::class.java)
+      val prefs = context.getSharedPreferences("metro_alarm_prefs", Context.MODE_PRIVATE)
+      val mode = prefs.getString("metro_alarm_mode", "sound")
+      val intent = Intent(context, AlarmService::class.java).apply {
+        putExtra(AlarmService.EXTRA_ALARM_MODE, mode)
+      }
       val pi = PendingIntent.getService(
         context,
         SCHEDULE_REQUEST_CODE,
@@ -189,19 +248,7 @@ class MetroAlarmModule(private val reactContext: ReactApplicationContext) :
   @ReactMethod
   fun cancelScheduledAlarm(promise: Promise) {
     try {
-      val context = reactContext.applicationContext
-      val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-      val intent = Intent(context, AlarmService::class.java)
-      val pi = PendingIntent.getService(
-        context,
-        SCHEDULE_REQUEST_CODE,
-        intent,
-        PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE,
-      )
-      if (pi != null) {
-        am.cancel(pi)
-        pi.cancel()
-      }
+      cancelWatchdogAlarm(reactContext.applicationContext)
       promise.resolve(true)
     } catch (e: Exception) {
       promise.reject("CANCEL_SCHEDULE_FAILED", e.message, e)

@@ -12,12 +12,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
 import type { Plan } from './src/metro/planner';
-import { planFastest, planLeastChanges } from './src/metro/planner';
+import { planAlternates, planFastest, planLeastChanges } from './src/metro/planner';
 import { LINE_COLORS, collectStationsWithCoords, delhiNetwork } from './src/metro/delhiNetwork';
 import { collectStations } from './src/metro/data';
 import { MetroAlarm } from './src/native/MetroAlarm';
 import { TripController, hav } from './src/trip/TripController';
-import type { TripSnapshot } from './src/trip/TripController';
+import type { AlarmAlertMode, TripSnapshot } from './src/trip/TripController';
 
 const fmtMin = (seconds: number) => `${Math.round(seconds / 60)} min`;
 
@@ -139,21 +139,44 @@ function TypeaheadPicker(props: {
   options: Map<string, string>;
   onChange: (id: string) => void;
   placeholder?: string;
+  onClear?: () => void;
 }) {
-  const [query, setQuery] = useState('');
+  const currentName = props.options.get(props.value) ?? '';
+  const [query, setQuery] = useState(currentName);
   const [open, setOpen] = useState(false);
   const t = props.t;
 
+  // Sync query when props.value changes externally
+  useEffect(() => {
+    if (!open) {
+      setQuery(props.options.get(props.value) ?? '');
+    }
+  }, [props.value, props.options, open]);
+
   const filtered = useMemo(() => {
     const all = [...props.options.entries()].sort((a, b) => a[1].localeCompare(b[1]));
-    if (!query.trim()) return all.slice(0, 12);
     const q = query.trim().toLowerCase();
-    return all.filter(([, name]) => name.toLowerCase().includes(q)).slice(0, 14);
+    if (!q) return all.slice(0, 16);
+    return all.filter(([, name]) => name.toLowerCase().includes(q)).slice(0, 20);
   }, [props.options, query]);
+
+  const handleClear = () => {
+    props.onChange('');
+    setQuery('');
+    setOpen(true);
+    props.onClear?.();
+  };
 
   return (
     <View style={styles.pickerWrapper}>
-      <Text style={[styles.label, { color: t.textDim }]}>{props.label}</Text>
+      <View style={styles.pickerLabelRow}>
+        <Text style={[styles.label, { color: t.textDim }]}>{props.label}</Text>
+        {props.value ? (
+          <Pressable onPress={handleClear} hitSlop={8}>
+            <Text style={[styles.clearLinkText, { color: t.accent }]}>✕ Clear</Text>
+          </Pressable>
+        ) : null}
+      </View>
       <View
         style={[
           styles.inputContainer,
@@ -166,12 +189,12 @@ function TypeaheadPicker(props: {
           placeholderTextColor={t.textFaint}
           onFocus={() => {
             setOpen(true);
-            setQuery('');
+            setQuery(props.options.get(props.value) ?? '');
           }}
           onChangeText={setQuery}
         />
-        {open && query.length > 0 ? (
-          <Pressable onPress={() => setQuery('')} style={styles.inputClearBtn}>
+        {props.value || (open && query.length > 0) ? (
+          <Pressable onPress={handleClear} style={styles.inputClearBtn} hitSlop={10}>
             <Text style={[styles.inputClearText, { color: t.textDim }]}>✕</Text>
           </Pressable>
         ) : null}
@@ -182,6 +205,19 @@ function TypeaheadPicker(props: {
             styles.suggestBox,
             { backgroundColor: t.surface, borderColor: t.borderStrong },
           ]}>
+          <View style={[styles.suggestHeader, { borderBottomColor: t.border }]}>
+            <Text style={[styles.suggestHeaderTitle, { color: t.textDim }]}>
+              {query.trim() ? `Matching Stations (${filtered.length})` : 'Popular & All Stations'}
+            </Text>
+            <Pressable
+              onPress={() => {
+                setOpen(false);
+                setQuery(props.options.get(props.value) ?? '');
+              }}
+              hitSlop={8}>
+              <Text style={[styles.suggestCloseText, { color: t.accent }]}>Done ✕</Text>
+            </Pressable>
+          </View>
           <ScrollView style={styles.suggestScroll} keyboardShouldPersistTaps="handled">
             {filtered.map(([id, name]) => (
               <Pressable
@@ -193,6 +229,7 @@ function TypeaheadPicker(props: {
                 ]}
                 onPress={() => {
                   props.onChange(id);
+                  setQuery(name);
                   setOpen(false);
                 }}>
                 <Text
@@ -219,6 +256,52 @@ function TypeaheadPicker(props: {
   );
 }
 
+/** Alarm Alert Mode Selector (Sound + Vibrate / Vibration Only / Silent). */
+function AlertModeSelector(props: {
+  t: Theme;
+  alertMode: AlarmAlertMode;
+  onChange: (mode: AlarmAlertMode) => void;
+}) {
+  const t = props.t;
+  const modes: { id: AlarmAlertMode; icon: string; title: string; subtitle: string }[] = [
+    { id: 'sound', icon: '🔊', title: 'Sound & Vibrate', subtitle: 'Loud alarm tone' },
+    { id: 'vibration', icon: '📳', title: 'Vibration Only', subtitle: 'Strong buzz, no audio' },
+    { id: 'silent', icon: '🔕', title: 'Silent Alert', subtitle: 'Visual banner only' },
+  ];
+
+  return (
+    <View style={styles.alertModeContainer}>
+      <Text style={[styles.label, { color: t.textDim }]}>Alarm Alert Mode</Text>
+      <View style={styles.alertModeRow}>
+        {modes.map(m => {
+          const active = props.alertMode === m.id;
+          return (
+            <Pressable
+              key={m.id}
+              style={[
+                styles.alertModeChip,
+                { backgroundColor: t.surface2, borderColor: t.border },
+                active && { borderColor: t.accent, backgroundColor: t.accentSoft },
+              ]}
+              onPress={() => props.onChange(m.id)}>
+              <Text style={styles.alertModeIcon}>{m.icon}</Text>
+              <Text
+                style={[
+                  styles.alertModeTitle,
+                  { color: active ? t.accent : t.text },
+                  active && styles.alertModeTitleActive,
+                ]}>
+                {m.title}
+              </Text>
+              <Text style={[styles.alertModeSub, { color: t.textFaint }]}>{m.subtitle}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
 /* ── Route card with colored stage timeline ────────────────────────── */
 
 function RouteCard(props: {
@@ -226,15 +309,37 @@ function RouteCard(props: {
   title: string;
   plan: Plan | null;
   note?: string;
+  isPrimary?: boolean;
   onSetAlarm?: () => void;
 }) {
   const t = props.t;
   if (!props.plan) return null;
 
   return (
-    <View style={[styles.card, { backgroundColor: t.surface, borderColor: t.border }]}>
+    <View
+      style={[
+        styles.card,
+        { backgroundColor: t.surface, borderColor: props.isPrimary ? t.accent : t.border },
+      ]}>
       <View style={styles.cardHead}>
-        <Text style={[styles.cardTitle, { color: t.text }]}>{props.title}</Text>
+        <View style={styles.cardTitleWrap}>
+          <Text style={[styles.cardTitle, { color: t.text }]}>{props.title}</Text>
+          {props.plan.interchangeSummary ? (
+            <View
+              style={[
+                styles.interchangeBadge,
+                { backgroundColor: props.plan.changes === 0 ? t.greenSoft : t.amberSoft },
+              ]}>
+              <Text
+                style={[
+                  styles.interchangeBadgeText,
+                  { color: props.plan.changes === 0 ? t.green : t.amber },
+                ]}>
+                {props.plan.changes === 0 ? '🟢 Direct Route' : `🔄 ${props.plan.interchangeSummary}`}
+              </Text>
+            </View>
+          ) : null}
+        </View>
         <View style={styles.cardMeta}>
           <Text style={[styles.cardMetaBig, { color: t.accent }]}>
             {fmtMin(props.plan.timeS)}
@@ -354,6 +459,8 @@ function SplashInputScreen(props: {
   setDest: (id: string) => void;
   buffer: 1 | 2;
   setBuffer: (b: 1 | 2) => void;
+  alertMode: AlarmAlertMode;
+  setAlertMode: (m: AlarmAlertMode) => void;
   recentRides: SavedRide[];
   locating: boolean;
   detectMsg: string | null;
@@ -377,7 +484,7 @@ function SplashInputScreen(props: {
           Never miss your station. Wake up 1–2 stops early even with the screen off.
         </Text>
         <View style={[styles.offlineBadge, { backgroundColor: t.greenSoft, borderColor: t.green }]}>
-          <Text style={[styles.offlineBadgeText, { color: t.green }]}>● 100% Offline Geofencing · DMRC</Text>
+          <Text style={[styles.offlineBadgeText, { color: t.green }]}>● 100% Offline (No Internet / SIM Needed) · DMRC</Text>
         </View>
       </View>
 
@@ -440,7 +547,21 @@ function SplashInputScreen(props: {
           ))}
         </View>
 
+        {/* Alarm Alert Mode Selector */}
+        <AlertModeSelector
+          t={t}
+          alertMode={props.alertMode}
+          onChange={props.setAlertMode}
+        />
+
         <Button t={t} variant="primary" label="🚀 Start Journey Alarm" onPress={props.onStartTrip} />
+      </View>
+
+      {/* Offline Guarantee Banner */}
+      <View style={[styles.offlineExplainer, { backgroundColor: t.surface, borderColor: t.border }]}>
+        <Text style={[styles.offlineExplainerText, { color: t.textDim }]}>
+          📶 <Text style={{ fontWeight: '700', color: t.text }}>Works 100% Offline:</Text> All DMRC line maps, transfer hubs, geofences, and tunnel dead-reckoning run entirely on your phone. No internet or cellular data is ever required.
+        </Text>
       </View>
 
       {/* Recent Trips / Quick Commute */}
@@ -476,7 +597,7 @@ function SplashInputScreen(props: {
           t={t}
           variant="muted"
           noTopMargin
-          label="🗺 Open Route Planner"
+          label="🗺 Open Route Planner & Interchange Options"
           onPress={props.onOpenPlanner}
         />
         <Button
@@ -502,6 +623,8 @@ function TripScreen(props: {
   setDest: (id: string) => void;
   buffer: 1 | 2;
   setBuffer: (b: 1 | 2) => void;
+  alertMode: AlarmAlertMode;
+  onAlertModeChange: (m: AlarmAlertMode) => void;
   recentRides: SavedRide[];
   snap: TripSnapshot;
   locating: boolean;
@@ -518,6 +641,8 @@ function TripScreen(props: {
   onDismissRecovery: () => void;
   onEndWalkCountdown: () => void;
   onTestAlarm: () => void;
+  onDepartNow: () => void;
+  onAdvanceStation: () => void;
 }) {
   const t = props.t;
   const snap = props.snap;
@@ -528,7 +653,7 @@ function TripScreen(props: {
       <View>
         <Text style={[styles.sub, { color: t.textDim }]}>
           Boarded the metro? Select your journey details. The alarm fires {props.buffer} stop(s)
-          before your destination using GPS distance and station arrivals.
+          before your destination using GPS distance, station arrivals, and underground dead-reckoning.
         </Text>
 
         {props.recentRides.length > 0 ? (
@@ -608,6 +733,13 @@ function TripScreen(props: {
             </Pressable>
           ))}
         </View>
+
+        <AlertModeSelector
+          t={t}
+          alertMode={props.alertMode}
+          onChange={props.onAlertModeChange}
+        />
+
         <Button t={t} label="Start trip" onPress={props.onStartTrip} />
         <Button
           t={t}
@@ -617,8 +749,7 @@ function TripScreen(props: {
           onPress={props.onTestAlarm}
         />
         <Text style={[styles.note, { color: t.textDim }]}>
-          Distance and verified station arrivals drive the alarm. Battery optimized for long rides.
-          Works with the phone locked and the app in background.
+          Distance and verified station arrivals drive the alarm. 100% offline and battery optimized for underground tunnels.
         </Text>
       </View>
     );
@@ -707,6 +838,41 @@ function TripScreen(props: {
         </View>
       ) : null}
 
+      {/* Underground Tunnel Mode Guidance Card */}
+      {snap.isUnderground && !done ? (
+        <View style={[styles.undergroundCard, { backgroundColor: t.surface2, borderColor: t.accent }]}>
+          <View style={styles.undergroundHeader}>
+            <Text style={[styles.undergroundTitle, { color: t.accent }]}>🚇 Underground Mode Active</Text>
+            <View style={[styles.undergroundPill, { backgroundColor: t.accentSoft }]}>
+              <Text style={[styles.undergroundPillText, { color: t.accent }]}>Dead Reckoning</Text>
+            </View>
+          </View>
+          <Text style={[styles.undergroundDesc, { color: t.textDim }]}>
+            GPS is shielded inside metro tunnels. Stops & ETA are calculated using official DMRC timetable runtimes and auto-advance.
+          </Text>
+          <View style={styles.undergroundActionRow}>
+            <Pressable
+              onPress={props.onDepartNow}
+              style={({ pressed }) => [
+                styles.undergroundBtn,
+                { backgroundColor: t.accent },
+                pressed && styles.btnPressed,
+              ]}>
+              <Text style={[styles.undergroundBtnText, { color: t.onAccent }]}>🚇 Train Departed</Text>
+            </Pressable>
+            <Pressable
+              onPress={props.onAdvanceStation}
+              style={({ pressed }) => [
+                styles.undergroundBtn,
+                { backgroundColor: t.surface, borderColor: t.border, borderWidth: 1 },
+                pressed && styles.btnPressed,
+              ]}>
+              <Text style={[styles.undergroundBtnText, { color: t.text }]}>⏭ Next Stop</Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : null}
+
       {/* Main Big Stop Counter */}
       <Text style={[styles.tripBig, { color: t.text }]}>
         {done ? '✓' : stops != null ? stops : '…'}
@@ -730,7 +896,7 @@ function TripScreen(props: {
       {/* Dwell notification: ETA is held while stopped */}
       {snap.isDwelling && !done && (
         <Text style={[styles.dwellNotice, { color: t.amber }]}>
-          ℹ️ Stopped at station platform. ETA remains held until the train departs.
+          ℹ️ Stopped at station platform. Will auto-resume on departure or within 38 seconds.
         </Text>
       )}
 
@@ -748,14 +914,7 @@ function TripScreen(props: {
                 ? '🔄 Change Line Now'
                 : 'ℹ️ Upcoming Transfer'}
           </Text>
-          <Text style={[styles.interchangeInstruction, { color: t.text }]}>
-            {snap.interchange.instruction}
-          </Text>
-          {snap.interchange.platform ? (
-            <Text style={[styles.platformBadge, { color: t.amber }]}>
-              ➔ Take {snap.interchange.platform}
-            </Text>
-          ) : null}
+
           {interchanging ? (
             <View style={styles.interchangeAutoBox}>
               <Text style={[styles.interchangeAutoNotice, { color: t.textDim }]}>
@@ -807,6 +966,33 @@ function TripScreen(props: {
         </View>
       </View>
 
+      {/* Live Alert Mode Toggle */}
+      {!done ? (
+        <View style={styles.tripAlertToggleWrap}>
+          <Text style={[styles.tripAlertToggleLabel, { color: t.textDim }]}>Alert Mode:</Text>
+          <View style={styles.tripAlertToggleChips}>
+            {(['sound', 'vibration', 'silent'] as AlarmAlertMode[]).map(m => {
+              const active = props.alertMode === m;
+              const labels = { sound: '🔊 Sound', vibration: '📳 Vibrate', silent: '🔕 Silent' };
+              return (
+                <Pressable
+                  key={m}
+                  style={[
+                    styles.tripAlertChip,
+                    { backgroundColor: t.surface2, borderColor: t.border },
+                    active && { backgroundColor: t.accentSoft, borderColor: t.accent },
+                  ]}
+                  onPress={() => props.onAlertModeChange(m)}>
+                  <Text style={[styles.tripAlertChipText, { color: active ? t.accent : t.textDim }]}>
+                    {labels[m]}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+      ) : null}
+
       {/* Walk-to-exit countdown */}
       {done && props.walkCountdown != null && props.walkCountdown > 0 ? (
         <View style={[styles.walkCard, { backgroundColor: t.surface2, borderColor: t.green }]}>
@@ -829,7 +1015,7 @@ function TripScreen(props: {
       {alarmed || interchangeAlarmed ? (
         <View style={styles.alarmActionRow}>
           <Button t={t} variant="warning" noTopMargin label="Snooze 3m" onPress={props.onSnoozeAlarm} />
-          <Button t={t} variant="muted" noTopMargin label="Silence alarm" onPress={props.onDismissAlarm} />
+          <Button t={t} variant="muted" noTopMargin label="Silence / Dismiss" onPress={props.onDismissAlarm} />
         </View>
       ) : null}
       <Button t={t} variant="ghost" noTopMargin label="End trip" onPress={props.onCancelTrip} />
@@ -851,6 +1037,7 @@ function App(): React.JSX.Element {
   const [enteredAt, setEnteredAt] = useState('dwarka-sector-21');
   const [dest, setDest] = useState('noida-electronic-city');
   const [buffer, setBuffer] = useState<1 | 2>(1);
+  const [alertMode, setAlertMode] = useState<AlarmAlertMode>('sound');
   const [locating, setLocating] = useState(false);
   const [detectMsg, setDetectMsg] = useState<string | null>(null);
   const [recentRides, setRecentRides] = useState<SavedRide[]>([]);
@@ -866,6 +1053,7 @@ function App(): React.JSX.Element {
     interchange: null,
     recovery: null,
     isDwelling: false,
+    isUnderground: false,
     batteryMode: 'balanced',
   });
 
@@ -878,6 +1066,11 @@ function App(): React.JSX.Element {
 
     const sub = DeviceEventEmitter.addListener('MetroTripLocation', fix => {
       controller.onFix(fix);
+    });
+
+    const dismissSub = DeviceEventEmitter.addListener('MetroAlarmDismissed', () => {
+      controller.dismiss();
+      setAlarmRinging(false);
     });
 
     (async () => {
@@ -894,6 +1087,11 @@ function App(): React.JSX.Element {
           const list = JSON.parse(recents);
           if (Array.isArray(list)) setRecentRides(list);
         }
+        const savedMode = await MetroAlarm.getString('metro_alarm_mode');
+        if (savedMode === 'sound' || savedMode === 'vibration' || savedMode === 'silent') {
+          setAlertMode(savedMode as AlarmAlertMode);
+          controller.setAlertMode(savedMode as AlarmAlertMode);
+        }
       } catch {
         // Ignored
       }
@@ -901,6 +1099,7 @@ function App(): React.JSX.Element {
 
     return () => {
       sub.remove();
+      dismissSub.remove();
       controller.cancel();
     };
   }, []);
@@ -957,7 +1156,19 @@ function App(): React.JSX.Element {
     setDest(temp);
   };
 
-  const startTripWithStations = async (originId: string, destId: string, buf: 1 | 2 = 1) => {
+  const updateAlertMode = (newMode: AlarmAlertMode) => {
+    setAlertMode(newMode);
+    MetroAlarm.saveString('metro_alarm_mode', newMode).catch(() => {});
+    MetroAlarm.setAlarmMode?.(newMode).catch(() => {});
+    trip.current?.setAlertMode(newMode);
+  };
+
+  const startTripWithPlan = async (
+    originId: string,
+    destId: string,
+    customPlan?: Plan,
+    buf: 1 | 2 = 1,
+  ) => {
     await MetroAlarm.requestNotificationPermission();
     await MetroAlarm.requestLocationPermission();
 
@@ -970,10 +1181,22 @@ function App(): React.JSX.Element {
     MetroAlarm.saveString('metro_recent_rides', JSON.stringify(updated)).catch(() => {});
 
     if (trip.current) {
-      trip.current.arm({ enteredAtId: originId, destId: destId, bufferStops: buf });
+      trip.current.arm({
+        enteredAtId: originId,
+        destId: destId,
+        bufferStops: buf,
+        plan: customPlan,
+        alertMode: alertMode,
+      });
       await MetroAlarm.startLocationUpdates();
       setMode('trip');
     }
+  };
+
+  const dismissAlarm = async () => {
+    trip.current?.dismiss();
+    await MetroAlarm.stopAlarm();
+    setAlarmRinging(false);
   };
 
   const cancelTrip = () => {
@@ -988,25 +1211,16 @@ function App(): React.JSX.Element {
       setAlarmRinging(false);
     } else {
       await MetroAlarm.requestNotificationPermission();
-      await MetroAlarm.startAlarm();
+      await MetroAlarm.startAlarm(alertMode);
       setAlarmRinging(true);
     }
   };
 
-  // Planner routes
-  const fastest = useMemo(
-    () => (enteredAt !== dest ? planFastest(delhiNetwork, enteredAt, dest) : null),
-    [enteredAt, dest],
-  );
-  const leastChanges = useMemo(
-    () => (enteredAt !== dest ? planLeastChanges(delhiNetwork, enteredAt, dest) : null),
-    [enteredAt, dest],
-  );
-  const identical =
-    fastest != null &&
-    leastChanges != null &&
-    fastest.changes === leastChanges.changes &&
-    fastest.timeS === leastChanges.timeS;
+  // Planner routes with alternate interchanges
+  const plannerRoutes = useMemo(() => {
+    if (enteredAt === dest || !enteredAt || !dest) return [];
+    return planAlternates(delhiNetwork, enteredAt, dest, 4);
+  }, [enteredAt, dest]);
 
   const isTripActive = snap.state !== 'idle' && snap.state !== 'done';
 
@@ -1106,12 +1320,14 @@ function App(): React.JSX.Element {
             setDest={setDest}
             buffer={buffer}
             setBuffer={setBuffer}
+            alertMode={alertMode}
+            setAlertMode={updateAlertMode}
             recentRides={recentRides}
             locating={locating}
             detectMsg={detectMsg}
             onAutoDetect={autoDetectOrigin}
             onSwap={swapStations}
-            onStartTrip={() => startTripWithStations(enteredAt, dest, buffer)}
+            onStartTrip={() => startTripWithPlan(enteredAt, dest, undefined, buffer)}
             onOpenPlanner={() => setMode('planner')}
             onTestAlarm={toggleTestAlarm}
           />
@@ -1125,6 +1341,8 @@ function App(): React.JSX.Element {
             setDest={setDest}
             buffer={buffer}
             setBuffer={setBuffer}
+            alertMode={alertMode}
+            onAlertModeChange={updateAlertMode}
             recentRides={recentRides}
             snap={snap}
             locating={locating}
@@ -1132,22 +1350,63 @@ function App(): React.JSX.Element {
             walkCountdown={walkCountdown}
             onAutoDetect={autoDetectOrigin}
             onSwap={swapStations}
-            onStartTrip={() => startTripWithStations(enteredAt, dest, buffer)}
+            onStartTrip={() => startTripWithPlan(enteredAt, dest, undefined, buffer)}
             onCancelTrip={cancelTrip}
-            onDismissAlarm={() => trip.current?.dismiss()}
+            onDismissAlarm={dismissAlarm}
             onSnoozeAlarm={() => trip.current?.snooze(3)}
             onAdvanceInterchange={() => trip.current?.advanceInterchange()}
             onRecalculateRecovery={() => trip.current?.recalculate()}
             onDismissRecovery={() => trip.current?.dismissRecovery()}
             onEndWalkCountdown={() => setWalkCountdown(null)}
             onTestAlarm={toggleTestAlarm}
+            onDepartNow={() => trip.current?.departNow()}
+            onAdvanceStation={() => trip.current?.advanceStation()}
           />
         ) : (
           <>
-            <Text style={[styles.header, { color: t.text }]}>Delhi Route Planner</Text>
-            <Text style={[styles.sub, { color: t.textDim }]}>
-              {options.length} stations across all Delhi Metro lines · 100% offline
-            </Text>
+            <View style={styles.plannerHeaderRow}>
+              <Text style={[styles.header, { color: t.text }]}>Delhi Route Planner</Text>
+              <Text style={[styles.sub, { color: t.textDim }]}>
+                {options.length} stations · Alternate interchanges · 100% offline
+              </Text>
+            </View>
+
+            {/* Quick Popular Hub Chips for easy 1-tap test & switch */}
+            <View style={styles.hubsWrap}>
+              <Text style={[styles.hubsTitle, { color: t.textDim }]}>Quick Stations:</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hubsScroll}>
+                {[
+                  { id: 'rajiv-chowk', name: 'Rajiv Chowk' },
+                  { id: 'kashmere-gate', name: 'Kashmere Gate' },
+                  { id: 'central-secretariat', name: 'Central Sectt' },
+                  { id: 'hauz-khas', name: 'Hauz Khas' },
+                  { id: 'mandi-house', name: 'Mandi House' },
+                  { id: 'botanical-garden', name: 'Botanical Gdn' },
+                  { id: 'dwarka-sector-21', name: 'Dwarka Sec 21' },
+                  { id: 'noida-electronic-city', name: 'Noida Elec City' },
+                ].map(hub => (
+                  <Pressable
+                    key={hub.id}
+                    style={({ pressed }) => [
+                      styles.hubChip,
+                      { backgroundColor: t.surface2, borderColor: t.border },
+                      pressed && styles.btnPressed,
+                    ]}
+                    onPress={() => {
+                      if (!enteredAt) {
+                        setEnteredAt(hub.id);
+                      } else if (!dest || dest === hub.id) {
+                        setDest(hub.id);
+                      } else {
+                        setDest(hub.id);
+                      }
+                    }}>
+                    <Text style={[styles.hubChipText, { color: t.text }]}>{hub.name}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
+
             <TypeaheadPicker
               t={t}
               label="Starting Station"
@@ -1155,6 +1414,21 @@ function App(): React.JSX.Element {
               options={stations}
               onChange={setEnteredAt}
             />
+
+            <View style={styles.plannerActionRow}>
+              <Button t={t} variant="ghost" noTopMargin label="⇅ Swap Stations" onPress={swapStations} />
+              <Button
+                t={t}
+                variant="ghost"
+                noTopMargin
+                label="✕ Clear Both"
+                onPress={() => {
+                  setEnteredAt('');
+                  setDest('');
+                }}
+              />
+            </View>
+
             <TypeaheadPicker
               t={t}
               label="Destination Station"
@@ -1162,29 +1436,33 @@ function App(): React.JSX.Element {
               options={stations}
               onChange={setDest}
             />
-            {enteredAt === dest ? (
+
+            {enteredAt === dest || !enteredAt || !dest ? (
               <Text style={[styles.note, { color: t.textDim }]}>
-                Select two different stations to calculate routing.
+                Select two different stations to calculate journey routes and interchange alternatives.
               </Text>
             ) : (
               <>
-                <RouteCard
-                  t={t}
-                  title="⚡ Fastest Journey"
-                  plan={fastest}
-                  onSetAlarm={() => startTripWithStations(enteredAt, dest, buffer)}
-                />
-                <RouteCard
-                  t={t}
-                  title="🔄 Fewest Transfers"
-                  plan={leastChanges}
-                  onSetAlarm={() => startTripWithStations(enteredAt, dest, buffer)}
-                />
-                {identical ? (
-                  <Text style={[styles.note, { color: t.textDim }]}>
-                    Both routes match — origin and destination share one direct line.
-                  </Text>
-                ) : null}
+                <Text style={[styles.plannerResultsHeader, { color: t.text }]}>
+                  Available Routes ({plannerRoutes.length})
+                </Text>
+
+                {plannerRoutes.map((routePlan, idx) => {
+                  const title =
+                    routePlan.label ??
+                    (idx === 0 ? '⚡ Fastest Route' : `🔄 Alternate Route #${idx + 1}`);
+                  return (
+                    <RouteCard
+                      key={`${routePlan.interchangeSummary ?? ''}-${idx}`}
+                      t={t}
+                      title={title}
+                      plan={routePlan}
+                      isPrimary={idx === 0}
+                      onSetAlarm={() => startTripWithPlan(enteredAt, dest, routePlan, buffer)}
+                    />
+                  );
+                })}
+
                 <Button
                   t={t}
                   variant={alarmRinging ? 'muted' : 'ghost'}
@@ -1276,6 +1554,17 @@ const styles = StyleSheet.create({
   pickerWrapper: {
     marginBottom: 8,
   } as ViewStyle,
+  pickerLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 8,
+    marginBottom: 4,
+  } as ViewStyle,
+  clearLinkText: {
+    fontSize: 12,
+    fontWeight: '700',
+  } as TextStyle,
   label: {
     fontSize: 11,
     marginTop: 8,
@@ -1314,6 +1603,24 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
   } as ViewStyle,
+  suggestHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  } as ViewStyle,
+  suggestHeaderTitle: {
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  } as TextStyle,
+  suggestCloseText: {
+    fontSize: 12,
+    fontWeight: '800',
+  } as TextStyle,
   suggestScroll: { maxHeight: 220 } as ViewStyle,
   suggestRow: {
     paddingVertical: 11,
@@ -1642,6 +1949,181 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: 10,
   } as ViewStyle,
+  cardTitleWrap: {
+    flex: 1,
+    gap: 4,
+  } as ViewStyle,
+  interchangeBadge: {
+    alignSelf: 'flex-start',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    marginTop: 2,
+  } as ViewStyle,
+  interchangeBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+  } as TextStyle,
+  alertModeContainer: {
+    marginVertical: 10,
+  } as ViewStyle,
+  alertModeRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 4,
+  } as ViewStyle,
+  alertModeChip: {
+    flex: 1,
+    borderWidth: 1.2,
+    borderRadius: 12,
+    padding: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  } as ViewStyle,
+  alertModeIcon: {
+    fontSize: 18,
+    marginBottom: 4,
+  } as TextStyle,
+  alertModeTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    textAlign: 'center',
+  } as TextStyle,
+  alertModeTitleActive: {
+    fontWeight: '800',
+  } as TextStyle,
+  alertModeSub: {
+    fontSize: 9,
+    textAlign: 'center',
+    marginTop: 2,
+  } as TextStyle,
+  offlineExplainer: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 14,
+  } as ViewStyle,
+  offlineExplainerText: {
+    fontSize: 12,
+    lineHeight: 17,
+  } as TextStyle,
+  undergroundCard: {
+    borderWidth: 1.5,
+    borderRadius: 14,
+    padding: 14,
+    marginVertical: 10,
+    alignSelf: 'stretch',
+  } as ViewStyle,
+  undergroundHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  } as ViewStyle,
+  undergroundTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+  } as TextStyle,
+  undergroundPill: {
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  } as ViewStyle,
+  undergroundPillText: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.4,
+  } as TextStyle,
+  undergroundDesc: {
+    fontSize: 12,
+    lineHeight: 17,
+    marginBottom: 10,
+  } as TextStyle,
+  undergroundActionRow: {
+    flexDirection: 'row',
+    gap: 8,
+  } as ViewStyle,
+  undergroundBtn: {
+    flex: 1,
+    paddingVertical: 9,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  } as ViewStyle,
+  undergroundBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+  } as TextStyle,
+  tripAlertToggleWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 12,
+    alignSelf: 'stretch',
+  } as ViewStyle,
+  tripAlertToggleLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  } as TextStyle,
+  tripAlertToggleChips: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: 6,
+  } as ViewStyle,
+  tripAlertChip: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  } as ViewStyle,
+  tripAlertChipText: {
+    fontSize: 11,
+    fontWeight: '700',
+  } as TextStyle,
+  plannerHeaderRow: {
+    marginBottom: 6,
+  } as ViewStyle,
+  hubsWrap: {
+    marginVertical: 8,
+  } as ViewStyle,
+  hubsTitle: {
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginBottom: 6,
+  } as TextStyle,
+  hubsScroll: {
+    flexDirection: 'row',
+    gap: 6,
+    paddingBottom: 4,
+  } as ViewStyle,
+  hubChip: {
+    borderWidth: 1.2,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  } as ViewStyle,
+  hubChipText: {
+    fontSize: 12,
+    fontWeight: '600',
+  } as TextStyle,
+  plannerActionRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginVertical: 4,
+  } as ViewStyle,
+  plannerResultsHeader: {
+    fontSize: 16,
+    fontWeight: '800',
+    marginTop: 14,
+    marginBottom: 2,
+  } as TextStyle,
 });
 
 export default App;

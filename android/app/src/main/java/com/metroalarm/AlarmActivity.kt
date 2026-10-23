@@ -53,8 +53,15 @@ class AlarmActivity : android.app.Activity() {
       gravity = Gravity.CENTER
     }
 
+    val mode = intent.getStringExtra(AlarmService.EXTRA_ALARM_MODE)
+    val modeText = when (mode) {
+      "silent" -> " (Silent Mode)"
+      "vibration" -> " (Vibration Only)"
+      else -> ""
+    }
+
     val subtitle = TextView(this).apply {
-      text = "Your metro stop is coming up"
+      text = "Your metro stop is coming up$modeText"
       textSize = 16f
       setTextColor(0xFFAAAAAA.toInt())
       gravity = Gravity.CENTER
@@ -122,6 +129,18 @@ class AlarmActivity : android.app.Activity() {
   }
 
   private fun dismissAlarm() {
+    // 1. Mark dismiss timestamp in shared preferences to prevent stray watchdog retrigger
+    try {
+      getSharedPreferences("metro_alarm_prefs", Context.MODE_PRIVATE)
+        .edit()
+        .putLong("last_dismissed_ts", System.currentTimeMillis())
+        .apply()
+    } catch (_: Exception) {}
+
+    // 2. Notify module to cancel AlarmManager watchdog and notify JS
+    MetroAlarmModule.notifyAlarmDismissed(this)
+
+    // 3. Stop running AlarmService
     startService(
       Intent(this, AlarmService::class.java).setAction(AlarmService.ACTION_STOP),
     )
