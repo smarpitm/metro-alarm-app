@@ -788,6 +788,69 @@ describe('TripController (overview replay)', () => {
 
     trip.cancel();
   });
+
+  it('gracefully auto-advances to second leg if passenger falls asleep at underground interchange platform', () => {
+    const trip = new TripController(delhiNetwork, () => {});
+    const startTime = 1_760_000_000_000;
+
+    const route = trip.arm({
+      enteredAtId: 'south-extension',
+      destId: 'rajiv-chowk',
+      bufferStops: 1,
+      now: startTime,
+    });
+
+    // Depart origin and reach interchange
+    trip.tick(startTime + 45_000);
+    // Dismiss interchange alarm upon arriving at platform
+    trip.dismiss(startTime + 45_000);
+    expect(trip.currentState.state).toBe('interchanging');
+
+    // 4.5 minutes pass while walking/waiting at platform, passenger boards connecting train
+    trip.tick(startTime + 45_000 + 250_000);
+
+    // Should have gracefully advanced to leg 2 (riding on Yellow Line)
+    expect(trip.currentState.state).toBe('riding');
+    expect(trip.currentState.lastStation).not.toBeNull();
+    expect(trip.currentState.stopsRemaining).toBeLessThan(route.length - 1);
+
+    trip.cancel();
+  });
+
+  it('gracefully detects if rider misses interchange and continues on the wrong train', () => {
+    const trip = new TripController(delhiNetwork, () => {});
+    // Trip: Noida Sector 18 -> Hauz Khas (planned interchange at Botanical Garden)
+    trip.arm({
+      enteredAtId: 'noida-sector-18',
+      destId: 'hauz-khas',
+      bufferStops: 1,
+    });
+
+    // Rider arrives at Botanical Garden
+    trip.onFix({ lat: 28.5639, lon: 77.3343, accuracy: 10, speed: 0, ts: 1_760_000_000_000 });
+    trip.dismiss();
+    expect(trip.currentState.state).toBe('interchanging');
+
+    // But rider stayed on Blue Line train towards Noida Sector 34!
+    // Noida Sec 34 coords: lat ~28.5802, lon ~77.3635 (off planned Magenta route to Hauz Khas)
+    const sec34Fix: Fix = {
+      lat: 28.5802,
+      lon: 77.3635,
+      accuracy: 10,
+      speed: 12,
+      ts: 1_760_000_300_000,
+    };
+
+    trip.onFix(sec34Fix);
+    trip.onFix({ ...sec34Fix, ts: 1_760_000_305_000 });
+
+    // Gracefully detects off-route recovery mode
+    expect(trip.currentState.state).toBe('wrong_trip');
+    expect(trip.currentState.recovery).not.toBeNull();
+    expect(trip.currentState.recovery?.recalculatedPlan).not.toBeNull();
+
+    trip.cancel();
+  });
 });
 
 

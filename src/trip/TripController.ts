@@ -374,7 +374,11 @@ export class TripController {
     }
 
     // 3. Off-route / Wrong Trip / Wrong Direction detection (Recovery Mode)
-    if (this.state === 'riding' && bestDist > 700) {
+    // Catches if rider boards the wrong line or misses their planned interchange
+    if (
+      (this.state === 'riding' || this.state === 'interchanging' || this.state === 'interchange_alarm') &&
+      bestDist > 700
+    ) {
       // Check backwards progress along previous stations on route
       let backwardsIdx = -1;
       let minBackDist = Infinity;
@@ -514,10 +518,13 @@ export class TripController {
       return;
     }
 
-    // Auto-dwell timeout: metro trains dwell for 30-45s at platforms, not indefinitely
+    // Auto-dwell timeout: metro trains dwell for 30-45s at platforms, and up to 4 mins at interchange hubs
     if (this.isDwelling) {
-      if (now - this.dwellStartTs >= DWELL_TIMEOUT_MS) {
-        // Platform wait complete; train has departed into tunnel towards next station
+      const dwellLimit = this.state === 'interchanging' ? 240_000 : DWELL_TIMEOUT_MS;
+      if (now - this.dwellStartTs >= dwellLimit) {
+        if (this.state === 'interchanging') {
+          this.advanceInterchange();
+        }
         this.isDwelling = false;
         this.lastMotionTs = now;
       } else {
@@ -761,7 +768,7 @@ export class TripController {
    * Once dismissed, the alarm for this milestone (destination or interchange)
    * will NEVER re-trigger again.
    */
-  dismiss() {
+  dismiss(now: number = Date.now()) {
     MetroAlarm.stopAlarm().catch(() => {});
     MetroAlarm.cancelScheduledAlarm().catch(() => {});
     if (this.snoozeTimer) {
@@ -780,6 +787,8 @@ export class TripController {
         this.dismissedInterchangeStationIds.add(activeIc.stationId);
       }
       this.state = 'interchanging';
+      this.isDwelling = true;
+      this.dwellStartTs = now;
       this.publish();
     }
   }
@@ -966,6 +975,10 @@ export class TripController {
     } else if (this.isDwelling && !this.isTrainDelayed) {
       this.isDwelling = false;
       this.lastMotionTs = Date.now();
+      // Auto-advance interchange if moving after passenger walked to second platform
+      if (this.state === 'interchanging' && Date.now() - this.dwellStartTs > 75_000) {
+        this.advanceInterchange();
+      }
     }
     this.publish();
   }
