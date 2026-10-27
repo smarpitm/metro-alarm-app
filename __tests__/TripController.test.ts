@@ -757,6 +757,37 @@ describe('TripController (overview replay)', () => {
     expect(MetroAlarm.stopAlarm).toHaveBeenCalled();
     expect(MetroAlarm.cancelScheduledAlarm).toHaveBeenCalled();
   });
+
+  it('successfully tracks and triggers interchange alarm on Pink Line underground with zero GPS fixes', () => {
+    const states: TripSnapshot[] = [];
+    const trip = new TripController(delhiNetwork, s => states.push({ ...s }));
+    const startTime = 1_760_000_000_000;
+
+    // Pink Line underground trip: South Extension -> Rajiv Chowk (transfer at Dilli Haat - INA)
+    const route = trip.arm({
+      enteredAtId: 'south-extension',
+      destId: 'rajiv-chowk',
+      bufferStops: 1,
+      now: startTime,
+    });
+
+    expect(route[0].id).toBe('south-extension');
+    // Origin platform dwell
+    expect(trip.currentState.isDwelling).toBe(true);
+
+    // 45 seconds later, in underground tunnel with zero GPS fixes: train departs platform
+    trip.tick(startTime + 45_000);
+    expect(trip.currentState.isDwelling).toBe(false);
+    expect(trip.currentState.isUnderground).toBe(true);
+
+    // Station cursor is at 0 (South Extension), next station is Dilli Haat - INA (interchange!)
+    // stopsToIc is 1 - 0 = 1 <= bufferStops
+    expect(trip.currentState.state).toBe('interchange_alarm');
+    expect(MetroAlarm.startAlarm).toHaveBeenCalled();
+    expect(trip.currentState.interchange?.stationName).toContain('INA');
+
+    trip.cancel();
+  });
 });
 
 
