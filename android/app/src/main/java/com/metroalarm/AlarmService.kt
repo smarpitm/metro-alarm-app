@@ -40,10 +40,10 @@ class AlarmService : Service() {
       return START_NOT_STICKY
     }
 
-    // Check if dismissed within the last 15 seconds to prevent stray watchdog re-triggering
+    // Check if dismissed within the last 60 seconds to prevent stray watchdog re-triggering
     val prefs = getSharedPreferences("metro_alarm_prefs", Context.MODE_PRIVATE)
     val lastDismissed = prefs.getLong("last_dismissed_ts", 0L)
-    if (System.currentTimeMillis() - lastDismissed < 15_000L) {
+    if (System.currentTimeMillis() - lastDismissed < 60_000L) {
       stopSelf()
       return START_NOT_STICKY
     }

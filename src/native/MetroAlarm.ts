@@ -41,20 +41,27 @@ interface MetroAlarmNative {
 
 const native = NativeModules.MetroAlarm as MetroAlarmNative | undefined;
 
-export const MetroAlarm: MetroAlarmNative = native ?? {
-  requestNotificationPermission: () => Promise.resolve(false),
-  startAlarm: (_mode?: 'sound' | 'vibration' | 'silent') => Promise.resolve(false),
-  startAlarmWithMode: (_mode: 'sound' | 'vibration' | 'silent') => Promise.resolve(false),
-  setAlarmMode: (_mode: 'sound' | 'vibration' | 'silent') => Promise.resolve(false),
-  stopAlarm: () => Promise.resolve(false),
-  isRinging: () => Promise.resolve(false),
-  requestLocationPermission: () => Promise.resolve(false),
-  startLocationUpdates: () => Promise.resolve(false),
-  stopLocationUpdates: () => Promise.resolve(false),
-  setTrackingMode: () => Promise.resolve(false),
-  scheduleAlarm: () => Promise.resolve(false),
-  cancelScheduledAlarm: () => Promise.resolve(false),
-  getLastKnownLocation: () => Promise.resolve(null),
-  saveString: () => Promise.resolve(false),
-  getString: () => Promise.resolve(null),
+export const MetroAlarm: MetroAlarmNative = {
+  requestNotificationPermission: () => native?.requestNotificationPermission() ?? Promise.resolve(false),
+  startAlarm: (mode?: 'sound' | 'vibration' | 'silent') => {
+    if (mode && native?.startAlarmWithMode) {
+      return native.startAlarmWithMode(mode);
+    }
+    return native?.startAlarm() ?? Promise.resolve(false);
+  },
+  startAlarmWithMode: (mode: 'sound' | 'vibration' | 'silent') =>
+    native?.startAlarmWithMode(mode) ?? Promise.resolve(false),
+  setAlarmMode: (mode: 'sound' | 'vibration' | 'silent') =>
+    native?.setAlarmMode(mode) ?? Promise.resolve(false),
+  stopAlarm: () => native?.stopAlarm() ?? Promise.resolve(false),
+  isRinging: () => native?.isRinging() ?? Promise.resolve(false),
+  requestLocationPermission: () => native?.requestLocationPermission() ?? Promise.resolve(false),
+  startLocationUpdates: () => native?.startLocationUpdates() ?? Promise.resolve(false),
+  stopLocationUpdates: () => native?.stopLocationUpdates() ?? Promise.resolve(false),
+  setTrackingMode: mode => native?.setTrackingMode(mode) ?? Promise.resolve(false),
+  scheduleAlarm: triggerAtMillis => native?.scheduleAlarm(triggerAtMillis) ?? Promise.resolve(false),
+  cancelScheduledAlarm: () => native?.cancelScheduledAlarm() ?? Promise.resolve(false),
+  getLastKnownLocation: () => native?.getLastKnownLocation() ?? Promise.resolve(null),
+  saveString: (key, value) => native?.saveString(key, value) ?? Promise.resolve(false),
+  getString: key => native?.getString(key) ?? Promise.resolve(null),
 };

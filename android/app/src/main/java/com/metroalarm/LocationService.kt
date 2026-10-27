@@ -6,6 +6,10 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
@@ -17,13 +21,17 @@ import com.facebook.react.modules.core.DeviceEventManagerModule
 
 /**
  * Foreground service streaming GPS fixes to JS during an active trip (D-007 P1).
- * Schema per fix: { lat, lon, accuracy, speed, ts } → JS event "MetroTripLocation".
+ * Schema per fix: { lat, lon, accuracy, speed, ts, moving } → JS event "MetroTripLocation".
+ * Also emits "MetroMotionState" for dead-reckoning pause when stationary underground.
  * JS owns ALL decisions (snap, count, alarm); this service only observes.
  */
-class LocationService : Service(), LocationListener {
+class LocationService : Service(), LocationListener, SensorEventListener {
 
   private var currentMinTime: Long = 4000L
   private var currentMinDistance: Float = 20f
+  private var lastMotionTime: Long = System.currentTimeMillis()
+  private var lastReportedMoving: Boolean = true
+  private var sensorManager: SensorManager? = null
 
   override fun onBind(intent: Intent?) = null
 
@@ -50,6 +58,14 @@ class LocationService : Service(), LocationListener {
       startForeground(NOTIFICATION_ID, notification)
     }
     applyPolicy(currentMinTime, currentMinDistance)
+    if (sensorManager == null) {
+      val sm = getSystemService(SENSOR_SERVICE) as? SensorManager
+      sensorManager = sm
+      val accel = sm?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+      if (accel != null) {
+        sm.registerListener(this, accel, SensorManager.SENSOR_DELAY_NORMAL)
+      }
+    }
     running = true
     return START_STICKY
   }
@@ -74,6 +90,37 @@ class LocationService : Service(), LocationListener {
     }
   }
 
+  override fun onSensorChanged(event: SensorEvent?) {
+    if (event?.sensor?.type == Sensor.TYPE_ACCELEROMETER) {
+      val x = event.values[0]
+      val y = event.values[1]
+      val z = event.values[2]
+      val mag = Math.sqrt((x * x + y * y + z * z).toDouble()).toFloat()
+      val diff = Math.abs(mag - 9.8f)
+      val now = System.currentTimeMillis()
+
+      if (diff > 0.35f) {
+        lastMotionTime = now
+      }
+
+      val moving = (now - lastMotionTime < 6000L)
+      if (moving != lastReportedMoving) {
+        lastReportedMoving = moving
+        val ctx = MetroAlarmModule.appContext ?: return
+        val params = Arguments.createMap().apply {
+          putBoolean("moving", moving)
+        }
+        try {
+          ctx
+            .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+            .emit("MetroMotionState", params)
+        } catch (_: Exception) {}
+      }
+    }
+  }
+
+  override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+
   override fun onLocationChanged(location: Location) {
     val ctx = MetroAlarmModule.appContext ?: return
     val params = Arguments.createMap().apply {
@@ -82,6 +129,7 @@ class LocationService : Service(), LocationListener {
       putDouble("accuracy", location.accuracy.toDouble())
       putDouble("speed", location.speed.toDouble())
       putDouble("ts", location.time.toDouble())
+      putBoolean("moving", lastReportedMoving)
     }
     ctx
       .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
@@ -90,6 +138,10 @@ class LocationService : Service(), LocationListener {
 
   private fun stopTracking() {
     running = false
+    try {
+      sensorManager?.unregisterListener(this)
+    } catch (_: Exception) {}
+    sensorManager = null
     val lm = getSystemService(LOCATION_SERVICE) as LocationManager
     try {
       lm.removeUpdates(this)

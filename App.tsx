@@ -408,6 +408,68 @@ function RouteCard(props: {
   );
 }
 
+/* ── Route Options Selector (Possible 2 routes / interchange choices) ── */
+
+function RouteOptionsSelector(props: {
+  t: Theme;
+  routes: Plan[];
+  selectedIdx: number;
+  onSelect: (idx: number) => void;
+}) {
+  const t = props.t;
+  if (props.routes.length === 0) return null;
+
+  return (
+    <View style={styles.routeSelectorWrap}>
+      <Text style={[styles.label, { color: t.textDim }]}>
+        Route & Interchange Options ({props.routes.length} available)
+      </Text>
+      <View style={styles.routeCardsRow}>
+        {props.routes.map((p, idx) => {
+          const isSelected = props.selectedIdx === idx;
+          const isFastest = idx === 0;
+          return (
+            <Pressable
+              key={idx}
+              style={[
+                styles.routeOptionCard,
+                { backgroundColor: t.surface2, borderColor: t.border },
+                isSelected && { borderColor: t.accent, backgroundColor: t.accentSoft },
+              ]}
+              onPress={() => props.onSelect(idx)}>
+              <View style={styles.routeOptionHead}>
+                <Text
+                  style={[
+                    styles.routeOptionTitle,
+                    { color: isSelected ? t.accent : t.text },
+                    isSelected && { fontWeight: '800' },
+                  ]}>
+                  {isFastest ? '⚡ Route 1 (Fastest)' : `🔄 Route 2 (Alternative Interchange)`}
+                </Text>
+                {isSelected ? (
+                  <View style={[styles.routeBadge, { backgroundColor: t.accent }]}>
+                    <Text style={styles.routeBadgeText}>✓ Selected</Text>
+                  </View>
+                ) : null}
+              </View>
+              <Text
+                style={[
+                  styles.routeOptionSummary,
+                  { color: p.changes === 0 ? t.green : t.amber },
+                ]}>
+                {p.changes === 0 ? '🟢 Direct Route' : `🔄 ${p.interchangeSummary}`}
+              </Text>
+              <Text style={[styles.routeOptionMeta, { color: t.textDim }]}>
+                ~{fmtMin(p.timeS)} · {p.stationCount} stops · {p.changes === 0 ? '0 transfers' : `${p.changes} transfer`}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
 /* ── Active Trip Banner (Shown in Planner so trip is never lost) ─────── */
 
 function ActiveTripBanner(props: {
@@ -462,6 +524,9 @@ function SplashInputScreen(props: {
   alertMode: AlarmAlertMode;
   setAlertMode: (m: AlarmAlertMode) => void;
   recentRides: SavedRide[];
+  routes: Plan[];
+  selectedRouteIdx: number;
+  onSelectRoute: (idx: number) => void;
   locating: boolean;
   detectMsg: string | null;
   onAutoDetect: () => void;
@@ -471,6 +536,7 @@ function SplashInputScreen(props: {
   onTestAlarm: () => void;
 }) {
   const t = props.t;
+  const currentPlan = props.routes[props.selectedRouteIdx] ?? props.routes[0];
 
   return (
     <View style={styles.splashContainer}>
@@ -492,18 +558,10 @@ function SplashInputScreen(props: {
       <View style={[styles.splashCard, { backgroundColor: t.surface, borderColor: t.border }]}>
         <Text style={[styles.splashCardHeading, { color: t.text }]}>Start Your Journey</Text>
 
+        {/* 1. FROM Station (Boarded at) */}
         <TypeaheadPicker
           t={t}
-          label="Where are you going?"
-          placeholder="Destination station…"
-          value={props.dest}
-          options={props.stations}
-          onChange={props.setDest}
-        />
-
-        <TypeaheadPicker
-          t={t}
-          label="Boarded at"
+          label="From (Boarded at)"
           placeholder="Origin station…"
           value={props.enteredAt}
           options={props.stations}
@@ -519,11 +577,31 @@ function SplashInputScreen(props: {
             onPress={props.onAutoDetect}
             disabled={props.locating}
           />
-          <Button t={t} variant="ghost" noTopMargin label="⇅ Swap" onPress={props.onSwap} />
+          <Button t={t} variant="ghost" noTopMargin label="⇅ Swap Stations" onPress={props.onSwap} />
         </View>
         {props.detectMsg ? (
           <Text style={[styles.detectFeedback, { color: t.accent }]}>{props.detectMsg}</Text>
         ) : null}
+
+        {/* 2. TO Station (Destination) */}
+        <TypeaheadPicker
+          t={t}
+          label="To (Destination station)"
+          placeholder="Where are you going?"
+          value={props.dest}
+          options={props.stations}
+          onChange={props.setDest}
+        />
+
+        {/* 3. Route & Interchange Options (Top 2 routes) */}
+        {props.routes.length > 0 && (
+          <RouteOptionsSelector
+            t={t}
+            routes={props.routes}
+            selectedIdx={props.selectedRouteIdx}
+            onSelect={props.onSelectRoute}
+          />
+        )}
 
         <Text style={[styles.label, { color: t.textDim }]}>Alarm trigger timing</Text>
         <View style={styles.bufferRow}>
@@ -554,7 +632,16 @@ function SplashInputScreen(props: {
           onChange={props.setAlertMode}
         />
 
-        <Button t={t} variant="primary" label="🚀 Start Journey Alarm" onPress={props.onStartTrip} />
+        <Button
+          t={t}
+          variant="primary"
+          label={
+            currentPlan?.interchangeSummary
+              ? `🚀 Start Journey Alarm · ${currentPlan.interchangeSummary}`
+              : '🚀 Start Journey Alarm'
+          }
+          onPress={props.onStartTrip}
+        />
       </View>
 
       {/* Offline Guarantee Banner */}
@@ -626,6 +713,9 @@ function TripScreen(props: {
   alertMode: AlarmAlertMode;
   onAlertModeChange: (m: AlarmAlertMode) => void;
   recentRides: SavedRide[];
+  routes: Plan[];
+  selectedRouteIdx: number;
+  onSelectRoute: (idx: number) => void;
   snap: TripSnapshot;
   locating: boolean;
   detectMsg: string | null;
@@ -643,10 +733,13 @@ function TripScreen(props: {
   onTestAlarm: () => void;
   onDepartNow: () => void;
   onAdvanceStation: () => void;
+  onStepBackStation: () => void;
+  onToggleDelay: () => void;
 }) {
   const t = props.t;
   const snap = props.snap;
   const stations = props.stations;
+  const currentPlan = props.routes[props.selectedRouteIdx] ?? props.routes[0];
 
   if (snap.state === 'idle') {
     return (
@@ -684,7 +777,7 @@ function TripScreen(props: {
 
         <TypeaheadPicker
           t={t}
-          label="I entered at"
+          label="From (Boarded at)"
           value={props.enteredAt}
           options={stations}
           onChange={props.setEnteredAt}
@@ -698,7 +791,7 @@ function TripScreen(props: {
             onPress={props.onAutoDetect}
             disabled={props.locating}
           />
-          <Button t={t} variant="ghost" noTopMargin label="⇅ Swap" onPress={props.onSwap} />
+          <Button t={t} variant="ghost" noTopMargin label="⇅ Swap Stations" onPress={props.onSwap} />
         </View>
         {props.detectMsg ? (
           <Text style={[styles.detectFeedback, { color: t.accent }]}>{props.detectMsg}</Text>
@@ -706,11 +799,21 @@ function TripScreen(props: {
 
         <TypeaheadPicker
           t={t}
-          label="Going to"
+          label="To (Destination station)"
           value={props.dest}
           options={stations}
           onChange={props.setDest}
         />
+
+        {/* Route & Interchange Options (Top 2 routes) */}
+        {props.routes.length > 0 && (
+          <RouteOptionsSelector
+            t={t}
+            routes={props.routes}
+            selectedIdx={props.selectedRouteIdx}
+            onSelect={props.onSelectRoute}
+          />
+        )}
 
         <Text style={[styles.label, { color: t.textDim }]}>Alarm before destination</Text>
         <View style={styles.bufferRow}>
@@ -740,7 +843,15 @@ function TripScreen(props: {
           onChange={props.onAlertModeChange}
         />
 
-        <Button t={t} label="Start trip" onPress={props.onStartTrip} />
+        <Button
+          t={t}
+          label={
+            currentPlan?.interchangeSummary
+              ? `🚀 Start Trip (${currentPlan.interchangeSummary})`
+              : 'Start trip'
+          }
+          onPress={props.onStartTrip}
+        />
         <Button
           t={t}
           variant="ghost"
@@ -782,13 +893,14 @@ function TripScreen(props: {
           interchanging && { backgroundColor: t.accent },
           wrongTrip && { backgroundColor: t.red },
           done && { backgroundColor: t.green },
+          snap.isTrainDelayed && { backgroundColor: t.amber },
         ]}>
         <Text
           style={[
             styles.statusPillText,
             { color: t.accent },
             (alarmed || interchanging || wrongTrip || done) && { color: t.onAccent },
-            interchangeAlarmed && { color: t.bg },
+            (interchangeAlarmed || snap.isTrainDelayed) && { color: t.bg },
           ]}>
           {alarmed
             ? '● DESTINATION ALARM — WAKE UP & GET READY'
@@ -800,9 +912,11 @@ function TripScreen(props: {
                   ? '⚠️ OFF-ROUTE / WRONG TRAIN DETECTED'
                   : done
                     ? '● ARRIVED AT DESTINATION'
-                    : snap.isDwelling
-                      ? '● AT STATION — WAITING FOR DEPARTURE'
-                      : '● RIDING IN TRANSIT'}
+                    : snap.isTrainDelayed
+                      ? '⏸ TRAIN HALTED / SIGNAL DELAY — COUNTDOWN PAUSED'
+                      : snap.isDwelling
+                        ? '● AT STATION — WAITING FOR DEPARTURE'
+                        : '● RIDING IN TRANSIT'}
         </Text>
       </View>
 
@@ -840,17 +954,54 @@ function TripScreen(props: {
 
       {/* Underground Tunnel Mode Guidance Card */}
       {snap.isUnderground && !done ? (
-        <View style={[styles.undergroundCard, { backgroundColor: t.surface2, borderColor: t.accent }]}>
+        <View
+          style={[
+            styles.undergroundCard,
+            { backgroundColor: t.surface2, borderColor: snap.isTrainDelayed ? t.amber : t.accent },
+          ]}>
           <View style={styles.undergroundHeader}>
-            <Text style={[styles.undergroundTitle, { color: t.accent }]}>🚇 Underground Mode Active</Text>
-            <View style={[styles.undergroundPill, { backgroundColor: t.accentSoft }]}>
-              <Text style={[styles.undergroundPillText, { color: t.accent }]}>Dead Reckoning</Text>
+            <Text
+              style={[
+                styles.undergroundTitle,
+                { color: snap.isTrainDelayed ? t.amber : t.accent },
+              ]}>
+              🚇 Underground Tunnel Mode
+            </Text>
+            <View
+              style={[
+                styles.undergroundPill,
+                { backgroundColor: snap.isTrainDelayed ? t.amberSoft : t.accentSoft },
+              ]}>
+              <Text
+                style={[
+                  styles.undergroundPillText,
+                  { color: snap.isTrainDelayed ? t.amber : t.accent },
+                ]}>
+                {snap.isTrainDelayed ? '⏸ Signal Delay / Stopped' : 'Motion & Dead Reckoning'}
+              </Text>
             </View>
           </View>
           <Text style={[styles.undergroundDesc, { color: t.textDim }]}>
-            GPS is shielded inside metro tunnels. Stops & ETA are calculated using official DMRC timetable runtimes and auto-advance.
+            {snap.isTrainDelayed
+              ? '⚠️ Train is halted or delayed in the tunnel. Timetable countdown is PAUSED so the alarm will not fire prematurely.'
+              : snap.isDwelling
+                ? '🚉 Dwelling at station platform. Waiting for departure.'
+                : '▶ Train in transit between stations. Tracking via official timetable runtimes & motion sensors.'}
           </Text>
           <View style={styles.undergroundActionRow}>
+            <Pressable
+              onPress={props.onToggleDelay}
+              style={({ pressed }) => [
+                styles.undergroundBtn,
+                {
+                  backgroundColor: snap.isTrainDelayed ? t.green : t.amber,
+                },
+                pressed && styles.btnPressed,
+              ]}>
+              <Text style={[styles.undergroundBtnText, { color: t.onAccent }]}>
+                {snap.isTrainDelayed ? '▶ Train Moving' : '⏸ Train Stopped / Delay'}
+              </Text>
+            </Pressable>
             <Pressable
               onPress={props.onDepartNow}
               style={({ pressed }) => [
@@ -858,7 +1009,18 @@ function TripScreen(props: {
                 { backgroundColor: t.accent },
                 pressed && styles.btnPressed,
               ]}>
-              <Text style={[styles.undergroundBtnText, { color: t.onAccent }]}>🚇 Train Departed</Text>
+              <Text style={[styles.undergroundBtnText, { color: t.onAccent }]}>🚇 Departed</Text>
+            </Pressable>
+          </View>
+          <View style={[styles.undergroundActionRow, { marginTop: 6 }]}>
+            <Pressable
+              onPress={props.onStepBackStation}
+              style={({ pressed }) => [
+                styles.undergroundBtn,
+                { backgroundColor: t.surface, borderColor: t.border, borderWidth: 1 },
+                pressed && styles.btnPressed,
+              ]}>
+              <Text style={[styles.undergroundBtnText, { color: t.textDim }]}>⏮ Prev Stop</Text>
             </Pressable>
             <Pressable
               onPress={props.onAdvanceStation}
@@ -1041,6 +1203,7 @@ function App(): React.JSX.Element {
   const [locating, setLocating] = useState(false);
   const [detectMsg, setDetectMsg] = useState<string | null>(null);
   const [recentRides, setRecentRides] = useState<SavedRide[]>([]);
+  const [selectedRouteIdx, setSelectedRouteIdx] = useState(0);
   const [alarmRinging, setAlarmRinging] = useState(false);
   const [walkCountdown, setWalkCountdown] = useState<number | null>(null);
 
@@ -1053,6 +1216,7 @@ function App(): React.JSX.Element {
     interchange: null,
     recovery: null,
     isDwelling: false,
+    isTrainDelayed: false,
     isUnderground: false,
     batteryMode: 'balanced',
   });
@@ -1066,6 +1230,10 @@ function App(): React.JSX.Element {
 
     const sub = DeviceEventEmitter.addListener('MetroTripLocation', fix => {
       controller.onFix(fix);
+    });
+
+    const motionSub = DeviceEventEmitter.addListener('MetroMotionState', ({ moving }) => {
+      controller.setMotion(moving);
     });
 
     const dismissSub = DeviceEventEmitter.addListener('MetroAlarmDismissed', () => {
@@ -1099,6 +1267,7 @@ function App(): React.JSX.Element {
 
     return () => {
       sub.remove();
+      motionSub.remove();
       dismissSub.remove();
       controller.cancel();
     };
@@ -1154,6 +1323,7 @@ function App(): React.JSX.Element {
     const temp = enteredAt;
     setEnteredAt(dest);
     setDest(temp);
+    setSelectedRouteIdx(0);
   };
 
   const updateAlertMode = (newMode: AlarmAlertMode) => {
@@ -1196,6 +1366,7 @@ function App(): React.JSX.Element {
   const dismissAlarm = async () => {
     trip.current?.dismiss();
     await MetroAlarm.stopAlarm();
+    await MetroAlarm.cancelScheduledAlarm();
     setAlarmRinging(false);
   };
 
@@ -1315,19 +1486,35 @@ function App(): React.JSX.Element {
             t={t}
             stations={stations}
             enteredAt={enteredAt}
-            setEnteredAt={setEnteredAt}
+            setEnteredAt={id => {
+              setEnteredAt(id);
+              setSelectedRouteIdx(0);
+            }}
             dest={dest}
-            setDest={setDest}
+            setDest={id => {
+              setDest(id);
+              setSelectedRouteIdx(0);
+            }}
             buffer={buffer}
             setBuffer={setBuffer}
             alertMode={alertMode}
             setAlertMode={updateAlertMode}
             recentRides={recentRides}
+            routes={plannerRoutes}
+            selectedRouteIdx={selectedRouteIdx}
+            onSelectRoute={setSelectedRouteIdx}
             locating={locating}
             detectMsg={detectMsg}
             onAutoDetect={autoDetectOrigin}
             onSwap={swapStations}
-            onStartTrip={() => startTripWithPlan(enteredAt, dest, undefined, buffer)}
+            onStartTrip={() =>
+              startTripWithPlan(
+                enteredAt,
+                dest,
+                plannerRoutes[selectedRouteIdx] ?? plannerRoutes[0],
+                buffer,
+              )
+            }
             onOpenPlanner={() => setMode('planner')}
             onTestAlarm={toggleTestAlarm}
           />
@@ -1336,21 +1523,37 @@ function App(): React.JSX.Element {
             t={t}
             stations={stations}
             enteredAt={enteredAt}
-            setEnteredAt={setEnteredAt}
+            setEnteredAt={id => {
+              setEnteredAt(id);
+              setSelectedRouteIdx(0);
+            }}
             dest={dest}
-            setDest={setDest}
+            setDest={id => {
+              setDest(id);
+              setSelectedRouteIdx(0);
+            }}
             buffer={buffer}
             setBuffer={setBuffer}
             alertMode={alertMode}
             onAlertModeChange={updateAlertMode}
             recentRides={recentRides}
+            routes={plannerRoutes}
+            selectedRouteIdx={selectedRouteIdx}
+            onSelectRoute={setSelectedRouteIdx}
             snap={snap}
             locating={locating}
             detectMsg={detectMsg}
             walkCountdown={walkCountdown}
             onAutoDetect={autoDetectOrigin}
             onSwap={swapStations}
-            onStartTrip={() => startTripWithPlan(enteredAt, dest, undefined, buffer)}
+            onStartTrip={() =>
+              startTripWithPlan(
+                enteredAt,
+                dest,
+                plannerRoutes[selectedRouteIdx] ?? plannerRoutes[0],
+                buffer,
+              )
+            }
             onCancelTrip={cancelTrip}
             onDismissAlarm={dismissAlarm}
             onSnoozeAlarm={() => trip.current?.snooze(3)}
@@ -1361,6 +1564,8 @@ function App(): React.JSX.Element {
             onTestAlarm={toggleTestAlarm}
             onDepartNow={() => trip.current?.departNow()}
             onAdvanceStation={() => trip.current?.advanceStation()}
+            onStepBackStation={() => trip.current?.stepBackStation()}
+            onToggleDelay={() => trip.current?.setTrainDelayed(!snap.isTrainDelayed)}
           />
         ) : (
           <>
@@ -2123,6 +2328,47 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     marginTop: 14,
     marginBottom: 2,
+  } as TextStyle,
+  routeSelectorWrap: {
+    marginVertical: 10,
+    alignSelf: 'stretch',
+  } as ViewStyle,
+  routeCardsRow: {
+    gap: 8,
+    marginTop: 6,
+  } as ViewStyle,
+  routeOptionCard: {
+    borderWidth: 1.5,
+    borderRadius: 12,
+    padding: 12,
+  } as ViewStyle,
+  routeOptionHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  } as ViewStyle,
+  routeOptionTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+  } as TextStyle,
+  routeBadge: {
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  } as ViewStyle,
+  routeBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#ffffff',
+  } as TextStyle,
+  routeOptionSummary: {
+    fontSize: 13,
+    fontWeight: '700',
+    marginBottom: 2,
+  } as TextStyle,
+  routeOptionMeta: {
+    fontSize: 11,
   } as TextStyle,
 });
 

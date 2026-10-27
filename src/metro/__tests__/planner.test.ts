@@ -78,5 +78,31 @@ describe('route planner (D-008)', () => {
         expect(p.legs[p.legs.length - 1].alightId).toBe('hauz-khas');
       }
     });
+
+    test('handles edge case of unknown or non-existent stations gracefully', () => {
+      const { planFastest, planLeastChanges, planAlternates } = require('../planner');
+      expect(planFastest(delhiNetwork, 'non-existent-station', 'dwarka-sector-21')).toBeNull();
+      expect(planFastest(delhiNetwork, 'dwarka-sector-21', 'non-existent-station')).toBeNull();
+      expect(planLeastChanges(delhiNetwork, 'invalid-1', 'invalid-2')).toBeNull();
+      expect(planAlternates(delhiNetwork, 'invalid-origin', 'invalid-dest')).toEqual([]);
+    });
+
+    test('handles edge case of identical origin and destination stations', () => {
+      const { planFastest, planAlternates } = require('../planner');
+      const fast = planFastest(delhiNetwork, 'rajiv-chowk', 'rajiv-chowk');
+      expect(fast).toEqual({ legs: [], timeS: 0, changes: 0, stationCount: 1 });
+      expect(planAlternates(delhiNetwork, 'rajiv-chowk', 'rajiv-chowk')).toEqual([]);
+    });
+
+    test('planAlternates returns clean direct route with 0 changes on single line without artificial loops', () => {
+      const { planAlternates } = require('../planner');
+      const directPlans = planAlternates(delhiNetwork, 'noida-sector-18', 'noida-electronic-city');
+      expect(directPlans.length).toBeGreaterThanOrEqual(1);
+      expect(directPlans[0].changes).toBe(0);
+      expect(directPlans[0].legs).toHaveLength(1);
+      expect(directPlans[0].legs[0].boardId).toBe('noida-sector-18');
+      expect(directPlans[0].legs[0].alightId).toBe('noida-electronic-city');
+    });
   });
 });
+

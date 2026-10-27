@@ -168,4 +168,58 @@ test('handles native MetroAlarmDismissed event and dismisses trip alarm without 
   expect(texts).toContain('Delhi Metro Alarm');
 });
 
+test('handles native MetroMotionState event without crashing', async () => {
+  const { DeviceEventEmitter } = require('react-native');
+  let root: ReactTestRenderer.ReactTestRenderer;
+  await ReactTestRenderer.act(async () => {
+    root = ReactTestRenderer.create(<App />);
+  });
+
+  // Emit motion state: stationary underground
+  await ReactTestRenderer.act(async () => {
+    DeviceEventEmitter.emit('MetroMotionState', { moving: false });
+  });
+
+  // Emit motion state: moving in tunnel
+  await ReactTestRenderer.act(async () => {
+    DeviceEventEmitter.emit('MetroMotionState', { moving: true });
+  });
+
+  const textInstances = root!.root.findAllByType('Text' as any);
+  const texts = textInstances.map(t => t.props.children).flat().join(' ');
+  expect(texts).toContain('Delhi Metro Alarm');
+});
+
+test('supports station swapping on splash screen', async () => {
+  let root: ReactTestRenderer.ReactTestRenderer;
+  await ReactTestRenderer.act(async () => {
+    root = ReactTestRenderer.create(<App />);
+  });
+
+  const findPressable = (node: any) => {
+    let cur = node;
+    while (cur) {
+      if (typeof cur.props?.onPress === 'function') return cur;
+      cur = cur.parent;
+    }
+    return null;
+  };
+
+  // Find swap button (⇅)
+  const swapBtn = root!.root.find(node =>
+    typeof node.props?.children === 'string' && node.props.children.includes('⇅')
+  );
+  expect(swapBtn).toBeDefined();
+
+  // Tap swap button
+  await ReactTestRenderer.act(async () => {
+    findPressable(swapBtn)?.props.onPress();
+  });
+
+  const textInstances = root!.root.findAllByType('Text' as any);
+  const texts = textInstances.map(t => t.props.children).flat().join(' ');
+  expect(texts).toContain('Start Journey Alarm');
+});
+
+
 

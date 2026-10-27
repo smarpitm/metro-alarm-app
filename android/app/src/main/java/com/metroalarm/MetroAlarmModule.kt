@@ -60,6 +60,10 @@ class MetroAlarmModule(private val reactContext: ReactApplicationContext) :
     fun notifyAlarmDismissed(context: Context) {
       cancelWatchdogAlarm(context)
       try {
+        val prefs = context.getSharedPreferences("metro_alarm_prefs", Context.MODE_PRIVATE)
+        prefs.edit().putLong("last_dismissed_ts", System.currentTimeMillis()).apply()
+      } catch (_: Exception) {}
+      try {
         appContext
           ?.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
           ?.emit("MetroAlarmDismissed", null)
@@ -126,6 +130,10 @@ class MetroAlarmModule(private val reactContext: ReactApplicationContext) :
     try {
       val context = reactContext.applicationContext
       cancelWatchdogAlarm(context)
+      try {
+        val prefs = context.getSharedPreferences("metro_alarm_prefs", Context.MODE_PRIVATE)
+        prefs.edit().putLong("last_dismissed_ts", System.currentTimeMillis()).apply()
+      } catch (_: Exception) {}
       context.startService(
         Intent(context, AlarmService::class.java).setAction(AlarmService.ACTION_STOP),
       )

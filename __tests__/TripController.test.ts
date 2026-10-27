@@ -21,11 +21,11 @@ jest.mock('../src/native/MetroAlarm', () => ({
 type Pin = { id: string; name: string; lat: number; lon: number; toNextS: number };
 
 /** Linearly interpolate a fix sequence along the route at ~12 m/s. */
-function replay(route: Pin[], stopAtIdx: number): Fix[] {
+function replay(route: Pin[], stopAtIdx: number, startAtIdx = 0): Fix[] {
   const fixes: Fix[] = [];
   let ts = 1_760_000_000_000;
   const speedMs = 12;
-  for (let i = 0; i < stopAtIdx && i + 1 < route.length; i++) {
+  for (let i = startAtIdx; i < stopAtIdx && i + 1 < route.length; i++) {
     const a = route[i];
     const b = route[i + 1];
     const dLat = b.lat - a.lat;
@@ -442,4 +442,321 @@ describe('TripController (overview replay)', () => {
 
     trip.cancel();
   });
+
+  it('dismissing destination alarm cancels watchdog and prevents re-triggering', () => {
+    const states: TripSnapshot[] = [];
+    const trip = new TripController(delhiNetwork, s => states.push({ ...s }));
+    const route = trip.arm({
+      enteredAtId: 'dwarka-sector-21',
+      destId: 'vaishali',
+      bufferStops: 1,
+    });
+
+    const atDestMinus1 = route.length - 2;
+    for (const fix of replay(route, atDestMinus1)) {
+      trip.onFix(fix);
+    }
+    expect(trip.currentState.state).toBe('alarmed');
+
+    // Dismiss alarm
+    trip.dismiss();
+    expect(trip.currentState.state).toBe('riding');
+    expect(MetroAlarm.stopAlarm).toHaveBeenCalled();
+    expect(MetroAlarm.cancelScheduledAlarm).toHaveBeenCalled();
+
+    // Subsequent ticks or watchdog should not reschedule a 10s alarm
+    (MetroAlarm.scheduleAlarm as jest.Mock).mockClear();
+    trip.tick(1_760_000_100_000);
+    expect(MetroAlarm.scheduleAlarm).not.toHaveBeenCalled();
+    expect(trip.currentState.state).toBe('riding');
+
+    trip.cancel();
+  });
+
+  it('pauses dead-reckoning progression when train is delayed or stationary in underground tunnel', () => {
+    const trip = new TripController(delhiNetwork, () => {});
+    const startTime = 1_760_000_000_000;
+    const route = trip.arm({
+      enteredAtId: 'rajiv-chowk',
+      destId: 'chandni-chowk',
+      bufferStops: 1,
+      now: startTime,
+    });
+
+    // Depart platform
+    trip.tick(startTime + 45_000);
+    expect(trip.currentState.isDwelling).toBe(false);
+
+    // Train gets stuck in tunnel: set delayed
+    trip.setTrainDelayed(true);
+    expect(trip.currentState.isTrainDelayed).toBe(true);
+
+    const initialEta = trip.currentState.etaS;
+    const initialLastStation = trip.currentState.lastStation;
+
+    // Time passes while train is delayed
+    trip.tick(startTime + 45_000 + 300_000); // 5 minutes pass
+    expect(trip.currentState.lastStation).toBe(initialLastStation);
+    expect(trip.currentState.etaS).toBe(initialEta);
+
+    // Train resumes moving
+    trip.setTrainDelayed(false);
+    expect(trip.currentState.isTrainDelayed).toBe(false);
+
+    trip.cancel();
+  });
+
+  it('supports manual station advance and step back for rider correction in tunnels', () => {
+    const trip = new TripController(delhiNetwork, () => {});
+    const route = trip.arm({
+      enteredAtId: 'rajiv-chowk',
+      destId: 'samaypur-badli',
+      bufferStops: 1,
+    });
+
+    expect(trip.currentState.lastStation).toBe(route[0].name);
+
+    // Rider taps Next Station
+    trip.advanceStation();
+    expect(trip.currentState.lastStation).toBe(route[1].name);
+    expect(trip.currentState.stopsRemaining).toBe(route.length - 2);
+
+    // Rider taps Prev Station
+    trip.stepBackStation();
+    expect(trip.currentState.lastStation).toBe(route[0].name);
+    expect(trip.currentState.stopsRemaining).toBe(route.length - 1);
+
+    // Edge case: stepping back at origin station should not underflow or crash
+    trip.stepBackStation();
+    expect(trip.currentState.lastStation).toBe(route[0].name);
+    expect(trip.currentState.stopsRemaining).toBe(route.length - 1);
+
+    // Edge case: advancing past destination should clamp at terminus without crash
+    for (let i = 0; i < route.length + 5; i++) {
+      trip.advanceStation();
+    }
+    expect(trip.currentState.lastStation).toBe(route[route.length - 1].name);
+    expect(trip.currentState.stopsRemaining).toBe(0);
+
+    trip.cancel();
+  });
+
+  it('rejects noisy GPS fixes above-ground (>80m) but accepts cell tower accuracy underground (up to 600m)', () => {
+    const trip = new TripController(delhiNetwork, () => {});
+    const startTime = 1_760_000_000_000;
+    const route = trip.arm({
+      enteredAtId: 'rajiv-chowk',
+      destId: 'chandni-chowk',
+      bufferStops: 1,
+      now: startTime,
+    });
+
+    const targetStation = route[1];
+
+    // Above ground: fix with accuracy 120m is rejected
+    trip.onFix({
+      lat: targetStation.lat,
+      lon: targetStation.lon,
+      accuracy: 120,
+      speed: 10,
+      ts: startTime + 10_000,
+    });
+    expect(trip.currentState.lastStation).toBe(route[0].name);
+
+    // Train enters tunnel and loses GPS for 45 seconds -> becomes underground
+    trip.tick(startTime + 45_000);
+    expect(trip.currentState.isUnderground).toBe(true);
+
+    // Underground: fix with accuracy 150m (cell tower) is accepted and snaps station
+    trip.onFix({
+      lat: targetStation.lat,
+      lon: targetStation.lon,
+      accuracy: 150,
+      speed: 10,
+      ts: startTime + 46_000,
+    });
+    expect(trip.currentState.lastStation).toBe(targetStation.name);
+
+    // Underground: wildly inaccurate fix (>600m) is still rejected
+    const farStation = route.at(-1)!;
+    trip.onFix({
+      lat: farStation.lat,
+      lon: farStation.lon,
+      accuracy: 750,
+      speed: 10,
+      ts: startTime + 50_000,
+    });
+    expect(trip.currentState.lastStation).toBe(targetStation.name);
+
+    trip.cancel();
+  });
+
+  it('maintains delay hold when accelerometer reports movement while train is delayed', () => {
+    const trip = new TripController(delhiNetwork, () => {});
+    const startTime = 1_760_000_000_000;
+    trip.arm({
+      enteredAtId: 'rajiv-chowk',
+      destId: 'chandni-chowk',
+      bufferStops: 1,
+      now: startTime,
+    });
+
+    // Rider sets train delayed
+    trip.setTrainDelayed(true);
+    expect(trip.currentState.isTrainDelayed).toBe(true);
+    expect(trip.currentState.isDwelling).toBe(true);
+
+    // Phone accelerometer detects vibration / movement, but delay toggle is active
+    trip.setMotion(true);
+    expect(trip.currentState.isDwelling).toBe(true);
+    expect(trip.currentState.isTrainDelayed).toBe(true);
+
+    // onFix with moving=true also does not clear dwelling while train is delayed
+    trip.onFix({
+      lat: 28.632,
+      lon: 77.219,
+      accuracy: 20,
+      speed: 0,
+      ts: startTime + 15_000,
+      moving: true,
+    });
+    expect(trip.currentState.isDwelling).toBe(true);
+
+    trip.cancel();
+  });
+
+  it('handles zero buffer stops (alarm triggers only at destination)', () => {
+    const states: TripSnapshot[] = [];
+    const trip = new TripController(delhiNetwork, s => states.push({ ...s }));
+    const route = trip.arm({
+      enteredAtId: 'dwarka-sector-21',
+      destId: 'vaishali',
+      bufferStops: 0, // Zero buffer stops
+    });
+
+    // Replay up to destination minus 1
+    const atDestMinus1 = route.length - 2;
+    for (const fix of replay(route, atDestMinus1)) {
+      trip.onFix(fix);
+    }
+    // Must NOT alarm at destination minus 1 when buffer is 0
+    expect(trip.currentState.state).toBe('riding');
+    expect(MetroAlarm.startAlarm).not.toHaveBeenCalled();
+
+    // Replay into destination station
+    for (const fix of replay(route, route.length - 1)) {
+      trip.onFix(fix);
+    }
+    // Alarm fired at destination, and after reaching terminus platform, state concludes
+    expect(MetroAlarm.startAlarm).toHaveBeenCalled();
+    expect(states.some(s => s.state === 'alarmed')).toBe(true);
+    expect(trip.currentState.state).toBe('done');
+
+    trip.cancel();
+  });
+
+  it('interchange alarm dismissal does not block final destination alarm on multi-leg routes', () => {
+    const { planAlternates } = require('../src/metro/planner');
+    const plans = planAlternates(delhiNetwork, 'noida-sector-18', 'hauz-khas');
+    const transferPlan = plans.find((p: any) => p.changes >= 1);
+    expect(transferPlan).toBeDefined();
+
+    const trip = new TripController(delhiNetwork, () => {});
+    const route = trip.arm({
+      enteredAtId: 'noida-sector-18',
+      destId: 'hauz-khas',
+      bufferStops: 1,
+      plan: transferPlan,
+    });
+
+    // Replay approaching interchange (<2500m but before 180m arrival)
+    const icIndex = route.findIndex(s => s.id === transferPlan.legs[0].alightId);
+    expect(icIndex).toBeGreaterThan(0);
+
+    const approachingFixes = replay(route, icIndex);
+    for (const fix of approachingFixes.slice(0, Math.max(3, Math.floor(approachingFixes.length * 0.7)))) {
+      trip.onFix(fix);
+    }
+    expect(trip.currentState.state).toBe('interchange_alarm');
+
+    // Dismiss interchange alarm
+    trip.dismiss();
+    expect(trip.currentState.state).toBe('interchanging');
+
+    // Transfer completed -> advance to leg 2
+    trip.advanceInterchange();
+    expect(trip.currentState.state).toBe('riding');
+
+    // Progress along leg 2 towards final destination
+    (MetroAlarm.startAlarm as jest.Mock).mockClear();
+    for (const fix of replay(route, route.length - 2, icIndex)) {
+      trip.onFix(fix);
+    }
+
+    // Destination alarm MUST fire even though interchange alarm was previously dismissed
+    expect(trip.currentState.state).toBe('alarmed');
+    expect(MetroAlarm.startAlarm).toHaveBeenCalled();
+
+    trip.cancel();
+  });
+
+  it('snoozes active alarm and re-triggers after snooze timer elapses', () => {
+    jest.useFakeTimers();
+    try {
+      const trip = new TripController(delhiNetwork, () => {});
+      const route = trip.arm({
+        enteredAtId: 'dwarka-sector-21',
+        destId: 'vaishali',
+        bufferStops: 1,
+      });
+
+      const atDestMinus1 = route.length - 2;
+      for (const fix of replay(route, atDestMinus1)) {
+        trip.onFix(fix);
+      }
+      expect(trip.currentState.state).toBe('alarmed');
+
+      // Snooze for 2 minutes
+      trip.snooze(2);
+      expect(trip.currentState.state).toBe('riding');
+      expect(MetroAlarm.stopAlarm).toHaveBeenCalled();
+      expect(MetroAlarm.scheduleAlarm).toHaveBeenCalledWith(expect.any(Number));
+
+      // Clear mock call count
+      (MetroAlarm.startAlarm as jest.Mock).mockClear();
+
+      // Fast forward 2 minutes
+      jest.advanceTimersByTime(2 * 60 * 1000);
+
+      // Alarm should re-trigger
+      expect(trip.currentState.state).toBe('alarmed');
+      expect(MetroAlarm.startAlarm).toHaveBeenCalled();
+
+      trip.cancel();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('cancel resets all internal tracking and stops all alarms cleanly', () => {
+    const trip = new TripController(delhiNetwork, () => {});
+    trip.arm({
+      enteredAtId: 'rajiv-chowk',
+      destId: 'chandni-chowk',
+      bufferStops: 1,
+    });
+    trip.setTrainDelayed(true);
+
+    trip.cancel();
+
+    expect(trip.currentState.state).toBe('idle');
+    expect(trip.currentState.lastStation).toBeNull();
+    expect(trip.currentState.stopsRemaining).toBeNull();
+    expect(trip.currentState.isTrainDelayed).toBe(false);
+    expect(trip.currentState.isDwelling).toBe(false);
+    expect(MetroAlarm.stopAlarm).toHaveBeenCalled();
+    expect(MetroAlarm.cancelScheduledAlarm).toHaveBeenCalled();
+  });
 });
+
+

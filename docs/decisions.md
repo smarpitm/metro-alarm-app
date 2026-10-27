@@ -3,6 +3,47 @@
 Format per entry: **Decision / Why / Alternatives rejected / Consequences**.
 Newest entries at the top. Keep entries small and factual; avoid re-litigating.
 
+## D-013 · Independent Multi-Leg Interchange Dismissal and Zero-Buffer Alarm Trigger Guarantee
+
+**Date:** Oct 2026 · **Status:** implemented
+
+- **Decision:**
+  1. Decouple interchange dismissal state from destination alarm state (`dismissedInterchangeStationIds` Set vs `destinationAlarmDismissed` boolean).
+  2. In `TripController.ts`, ensure `bufferStops === 0` triggers the destination alarm upon reaching the destination platform before transitioning ride state to `'done'`.
+  3. Ensure `triggerAlarm()` and `triggerInterchangeAlarm()` immediately broadcast updated state to UI listeners via `this.publish()`.
+- **Why:** In multi-line journeys, dismissing an interchange warning must never silence the final destination alarm. For riders requesting 0-stop buffer, arrival at the final station platform must trigger the alarm rather than silently completing.
+- **Alternatives rejected:** Single shared dismissal boolean (suppresses downstream destination alarms after a transfer); immediate `state: 'done'` transition without alarm check when buffer is zero (fails to wake passenger).
+- **Consequences:** All multi-leg routes and zero-buffer settings operate reliably across transfers and terminus stations.
+
+---
+
+## D-012 · AlarmManager Watchdog Termination and 60-Second Native Dismissal Guard
+
+**Date:** Oct 2026 · **Status:** implemented
+
+- **Decision:**
+  1. In `TripController.ts:rescheduleWatchdog()`, explicitly check if `cursor >= targetIdx` or if `destinationAlarmDismissed` is true. In either case, invoke `cancelScheduledAlarm()` instead of scheduling a minimum 10-second watchdog alarm.
+  2. Inside `AlarmService.kt` and `MetroAlarmModule.kt`, persist `last_dismissed_ts` to native Android `SharedPreferences` and enforce a 60-second suppression window against any incoming AlarmManager pending intents.
+  3. In `TripController.ts:cancel()`, reset `this.snapshot` fields to clean initial null values so residual stops and distance metrics are wiped.
+- **Why:** When a ride reached or passed the target station, remaining seconds was `0`, causing `Math.max(10, seconds) * 1000` to schedule an AlarmManager alarm 10 seconds into the future, causing an endless re-trigger loop even after the passenger dismissed the alarm.
+- **Alternatives rejected:** Increasing watchdog minimum interval to 60s (does not eliminate the re-trigger, only delays it); in-memory dismissal flags in Kotlin (lost if the Android OS kills and restarts the service).
+- **Consequences:** The alarm terminates definitively on first dismissal. No background audio or vibration re-triggers.
+
+---
+
+## D-011 · Native Accelerometer Sensor Fusion for Tunnel Delay and Dwell Freeze
+
+**Date:** Oct 2026 · **Status:** implemented
+
+- **Decision:**
+  1. Register Android standard library `Sensor.TYPE_ACCELEROMETER` inside `LocationService.kt` with zero third-party dependencies.
+  2. Measure acceleration variance against gravity ($9.8\text{ m/s}^2$). When delta $> 0.35\text{ m/s}^2$, flag device in motion; otherwise emit `MetroMotionState` `{ moving: false }`.
+  3. In `TripController.ts`, when stationary or when the rider toggles `⏸ Train Stopped / Delay`, freeze timetable dead-reckoning progression and hold ETA constant.
+  4. Expand underground cellular station snapping tolerance up to 600m to latch onto tunnel cell IDs.
+- **Why:** Delhi Metro tunnels occlude GPS signals completely. If a train is halted at an underground signal or delayed between stations, pure timetable countdown would continue advancing and fire alarms prematurely.
+- **Alternatives rejected:** Polling GPS speed in tunnels (returns NaN or 0 without fix); Google Play Services Activity Recognition API (adds closed-source binary bloat, requires network/auth, and increases battery drain).
+- **Consequences:** 100% offline sensor fusion keeps tunnel stops synchronized and halts countdown during signal delays.
+
 ---
 
 ## D-010 · Alternate Interchange Routing, Underground Dead-Reckoning, Alert Modes, and Persistent Alarm Dismissal

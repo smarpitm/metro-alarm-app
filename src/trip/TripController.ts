@@ -24,6 +24,7 @@ export interface Fix {
   accuracy: number;
   speed: number;
   ts: number;
+  moving?: boolean;
 }
 
 export type TripState =
@@ -72,6 +73,8 @@ export interface TripSnapshot {
   recovery?: RecoveryAlert | null;
   /** true when rider is dwelling/waiting at a station or interchange platform */
   isDwelling?: boolean;
+  /** true when train is halted or delayed at a signal in a tunnel */
+  isTrainDelayed?: boolean;
   /** battery optimization mode */
   batteryMode?: 'economy' | 'balanced' | 'approaching';
   /** true when GPS fixes are lost/stale in underground tunnels, using scheduled dead-reckoning */
@@ -132,6 +135,7 @@ export class TripController {
   private dwellStartTs = 0;
   private lastFixTs = 0;
   private isDwelling = true;
+  private isTrainDelayed = false;
   private isUnderground = false;
   private gpsStatus: 'gps' | 'underground' | 'searching' = 'searching';
   private ticker: ReturnType<typeof setInterval> | null = null;
@@ -280,8 +284,8 @@ export class TripController {
   onFix(fix: Fix) {
     if (this.state === 'idle' || this.state === 'done' || this.route.length === 0) return;
 
-    // In underground/tunnel mode, cell tower accuracy can be up to 180m
-    const maxAccuracy = this.isUnderground ? 200 : 80;
+    // In underground/tunnel mode, cell tower accuracy can be up to 600m
+    const maxAccuracy = this.isUnderground ? 600 : 80;
     if (fix.accuracy > maxAccuracy) return;
 
     const now = fix.ts || Date.now();
@@ -290,12 +294,22 @@ export class TripController {
     this.isUnderground = false;
     this.gpsStatus = 'gps';
 
+    // Accelerometer / motion sensor integration
+    if (fix.moving !== undefined) {
+      if (!fix.moving) {
+        this.isDwelling = true;
+      } else if (this.isDwelling && !this.isTrainDelayed) {
+        this.isDwelling = false;
+        this.lastMotionTs = now;
+      }
+    }
+
     // Dwell vs Motion check
     if (fix.speed >= 2.0) {
       // In motion between stations
       this.isDwelling = false;
       this.lastMotionTs = now;
-    } else if (fix.speed < 1.5) {
+    } else if (fix.speed < 1.5 && fix.speed >= 0) {
       // Stationary or low speed: check if near confirmed station or interchange
       const curPin = this.route[this.cursor];
       if (curPin && hav(fix, curPin) <= SNAP_RADIUS_M + 50) {
@@ -317,7 +331,8 @@ export class TripController {
       }
     }
 
-    if (bestIdx >= 0 && bestDist <= SNAP_RADIUS_M) {
+    const snapRadius = this.isUnderground ? Math.max(SNAP_RADIUS_M, Math.min(fix.accuracy * 0.8, 500)) : SNAP_RADIUS_M;
+    if (bestIdx >= 0 && bestDist <= snapRadius) {
       if (bestIdx > this.cursor) {
         this.cursor = bestIdx;
         this.isDwelling = true; // Just arrived at station; wait for departure
@@ -417,7 +432,11 @@ export class TripController {
     const etaRemainS = this.calculateRemainingEtaS(this.cursor);
 
     // 4. Arrived at final destination (Distance as final metric)
-    if (this.cursor >= this.route.length - 1 && distToDest <= ARRIVE_RADIUS_M) {
+    if (
+      this.cursor >= this.route.length - 1 &&
+      distToDest <= ARRIVE_RADIUS_M &&
+      (this.fired || this.destinationAlarmDismissed || this.bufferStops > 0)
+    ) {
       this.state = 'done';
       this.stopTicker();
       MetroAlarm.cancelScheduledAlarm().catch(() => {});
@@ -485,6 +504,14 @@ export class TripController {
     } else {
       this.isUnderground = false;
       this.gpsStatus = 'gps';
+    }
+
+    // If train is halted or delayed at signal in tunnel, hold ETA fixed and do not advance
+    if (this.isTrainDelayed) {
+      const totalRemainS = this.calculateRemainingEtaS(this.cursor);
+      const stopsFromCursor = this.route.length - 1 - this.cursor;
+      this.publish(stopsFromCursor, this.snapshot.distM ?? undefined, totalRemainS);
+      return;
     }
 
     // Auto-dwell timeout: metro trains dwell for 30-45s at platforms, not indefinitely
@@ -647,6 +674,7 @@ export class TripController {
     this.fired = true;
     this.state = 'alarmed';
     MetroAlarm.startAlarm(this.alertMode).catch(() => {});
+    this.publish();
   }
 
   private triggerInterchangeAlarm(ic?: InterchangePoint) {
@@ -657,13 +685,28 @@ export class TripController {
     this.confirmCount = 0;
     this.state = 'interchange_alarm';
     MetroAlarm.startAlarm(this.alertMode).catch(() => {});
+    this.publish();
   }
 
   private rescheduleWatchdog() {
-    const nextIc = this.interchanges.find(ic => ic.routeIndex > this.cursor && !ic.alerted);
+    const nextIc = this.interchanges.find(
+      ic => ic.routeIndex > this.cursor && !ic.alerted && !this.dismissedInterchangeStationIds.has(ic.stationId)
+    );
+    // If destination alarm already dismissed or fired, and there are no upcoming unalerted interchanges, never schedule!
+    if (!nextIc && (this.fired || this.destinationAlarmDismissed)) {
+      MetroAlarm.cancelScheduledAlarm().catch(() => {});
+      return;
+    }
+
     const targetIdx = nextIc
       ? Math.max(this.cursor, nextIc.routeIndex - this.bufferStops)
       : Math.max(0, this.route.length - 1 - this.bufferStops);
+
+    // If targetIdx has already been reached or passed, DO NOT schedule a 10s watchdog!
+    if (this.cursor >= targetIdx) {
+      MetroAlarm.cancelScheduledAlarm().catch(() => {});
+      return;
+    }
 
     let seconds = 0;
     for (let i = this.cursor; i < targetIdx; i++) {
@@ -728,6 +771,7 @@ export class TripController {
 
     if (this.state === 'alarmed') {
       this.destinationAlarmDismissed = true;
+      this.fired = true;
       this.state = 'riding';
       this.publish();
     } else if (this.state === 'interchange_alarm') {
@@ -762,6 +806,8 @@ export class TripController {
     this.state = 'idle';
     this.route = [];
     this.interchanges = [];
+    this.cursor = 0;
+    this.confirmCount = 0;
     this.fired = false;
     this.destinationAlarmDismissed = false;
     this.dismissedInterchangeStationIds.clear();
@@ -769,13 +815,29 @@ export class TripController {
     this.offRouteCount = 0;
     this.wrongDirCount = 0;
     this.isDwelling = false;
+    this.isTrainDelayed = false;
     this.isUnderground = false;
     this.gpsStatus = 'searching';
     this.currentPlan = null;
     this.stopTicker();
     MetroAlarm.cancelScheduledAlarm().catch(() => {});
     MetroAlarm.stopAlarm().catch(() => {});
-    this.publish();
+    this.snapshot = {
+      state: 'idle',
+      lastStation: null,
+      stopsRemaining: null,
+      distM: null,
+      etaS: null,
+      interchange: null,
+      recovery: null,
+      isDwelling: false,
+      isTrainDelayed: false,
+      batteryMode: 'balanced',
+      isUnderground: false,
+      gpsStatus: 'searching',
+      alertMode: this.alertMode,
+    };
+    this.onState(this.snapshot);
   }
 
   get currentState(): TripSnapshot {
@@ -847,6 +909,7 @@ export class TripController {
       interchange: interchangeAlert,
       recovery: this.recovery,
       isDwelling: this.isDwelling,
+      isTrainDelayed: this.isTrainDelayed,
       batteryMode: this.batteryMode,
       isUnderground: this.isUnderground,
       gpsStatus: this.gpsStatus,
@@ -855,15 +918,55 @@ export class TripController {
     this.onState(this.snapshot);
   }
 
+  // ponytail: shared station sync for manual next/prev overrides in tunnels
+  private syncStationCursor(newIdx: number) {
+    this.cursor = newIdx;
+    this.isDwelling = true;
+    this.dwellStartTs = Date.now();
+    this.lastMotionTs = Date.now();
+    this.rescheduleWatchdog();
+    this.publish(
+      this.route.length - 1 - this.cursor,
+      hav(this.route[this.cursor], this.route.at(-1)!),
+      this.calculateRemainingEtaS(this.cursor),
+    );
+  }
+
   /** Manual station sync if train was delayed or user wants to sync station in tunnel. */
   advanceStation() {
     if (this.cursor < this.route.length - 1) {
-      this.cursor += 1;
+      this.syncStationCursor(this.cursor + 1);
+    }
+  }
+
+  /** Step back to previous station if dead-reckoning was prematurely advanced. */
+  stepBackStation() {
+    if (this.cursor > 0) {
+      this.syncStationCursor(this.cursor - 1);
+    }
+  }
+
+  /** Set train delayed/halted in tunnel (pauses dead-reckoning). */
+  setTrainDelayed(delayed: boolean) {
+    this.isTrainDelayed = delayed;
+    if (delayed) {
       this.isDwelling = true;
       this.dwellStartTs = Date.now();
+    } else {
+      this.isDwelling = false;
       this.lastMotionTs = Date.now();
-      this.rescheduleWatchdog();
-      this.publish();
     }
+    this.publish();
+  }
+
+  /** Update motion state from device accelerometer. */
+  setMotion(moving: boolean) {
+    if (!moving) {
+      this.isDwelling = true;
+    } else if (this.isDwelling && !this.isTrainDelayed) {
+      this.isDwelling = false;
+      this.lastMotionTs = Date.now();
+    }
+    this.publish();
   }
 }
