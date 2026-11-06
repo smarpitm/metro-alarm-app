@@ -18,6 +18,7 @@ import { collectStations } from './src/metro/data';
 import { MetroAlarm } from './src/native/MetroAlarm';
 import { TripController, hav } from './src/trip/TripController';
 import type { AlarmAlertMode, TripSnapshot } from './src/trip/TripController';
+import { MetroMapScreen } from './src/map/MetroMapScreen';
 
 const fmtMin = (seconds: number) => `${Math.round(seconds / 60)} min`;
 
@@ -743,112 +744,18 @@ function TripScreen(props: {
 
   if (snap.state === 'idle') {
     return (
-      <View>
-        <Text style={[styles.sub, { color: t.textDim }]}>
-          Boarded the metro? Select your journey details. The alarm fires {props.buffer} stop(s)
-          before your destination using GPS distance, station arrivals, and underground dead-reckoning.
+      <View style={[styles.card, { backgroundColor: t.surface, borderColor: t.border }]}>
+        <Text style={[styles.cardTitle, { color: t.text }]}>No Active Trip Alarm</Text>
+        <Text style={[styles.sub, { color: t.textDim, marginVertical: 8 }]}>
+          You don't have an active trip running right now. Choose your boarding station and destination to arm the alarm, or explore stations on the full offline Metro Map.
         </Text>
-
-        {props.recentRides.length > 0 ? (
-          <View style={styles.recentContainer}>
-            <Text style={[styles.recentTitle, { color: t.textDim }]}>⚡ Frequent commutes</Text>
-            <View style={styles.recentWrap}>
-              {props.recentRides.map((r, i) => (
-                <Pressable
-                  key={i}
-                  style={({ pressed }) => [
-                    styles.recentChip,
-                    { backgroundColor: t.surface, borderColor: t.border },
-                    pressed && styles.btnPressed,
-                  ]}
-                  onPress={() => {
-                    props.setEnteredAt(r.enteredAt);
-                    props.setDest(r.dest);
-                    props.setBuffer(r.buffer);
-                  }}>
-                  <Text style={[styles.recentChipText, { color: t.text }]} numberOfLines={1}>
-                    {stations.get(r.enteredAt) ?? r.enteredAt} ➔ {stations.get(r.dest) ?? r.dest}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          </View>
-        ) : null}
-
-        <TypeaheadPicker
-          t={t}
-          label="From (Boarded at)"
-          value={props.enteredAt}
-          options={stations}
-          onChange={props.setEnteredAt}
-        />
-        <View style={styles.pickerActionRow}>
-          <Button
-            t={t}
-            variant="ghost"
-            noTopMargin
-            label={props.locating ? '◎ Locating…' : '◎ Auto-detect station'}
-            onPress={props.onAutoDetect}
-            disabled={props.locating}
-          />
-          <Button t={t} variant="ghost" noTopMargin label="⇅ Swap Stations" onPress={props.onSwap} />
-        </View>
-        {props.detectMsg ? (
-          <Text style={[styles.detectFeedback, { color: t.accent }]}>{props.detectMsg}</Text>
-        ) : null}
-
-        <TypeaheadPicker
-          t={t}
-          label="To (Destination station)"
-          value={props.dest}
-          options={stations}
-          onChange={props.setDest}
-        />
-
-        {/* Route & Interchange Options (Top 2 routes) */}
-        {props.routes.length > 0 && (
-          <RouteOptionsSelector
-            t={t}
-            routes={props.routes}
-            selectedIdx={props.selectedRouteIdx}
-            onSelect={props.onSelectRoute}
-          />
-        )}
-
-        <Text style={[styles.label, { color: t.textDim }]}>Alarm before destination</Text>
-        <View style={styles.bufferRow}>
-          {[1, 2].map(n => (
-            <Pressable
-              key={n}
-              style={[
-                styles.bufferChip,
-                { backgroundColor: t.surface, borderColor: t.border },
-                props.buffer === n && { backgroundColor: t.accent, borderColor: t.accent },
-              ]}
-              onPress={() => props.setBuffer(n as 1 | 2)}>
-              <Text
-                style={[
-                  styles.bufferText,
-                  { color: props.buffer === n ? t.onAccent : t.textDim },
-                ]}>
-                {n} stop{n > 1 ? 's' : ''} early
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-
-        <AlertModeSelector
-          t={t}
-          alertMode={props.alertMode}
-          onChange={props.onAlertModeChange}
-        />
-
         <Button
           t={t}
+          variant="primary"
           label={
             currentPlan?.interchangeSummary
               ? `🚀 Start Trip (${currentPlan.interchangeSummary})`
-              : 'Start trip'
+              : '🚀 Start Trip'
           }
           onPress={props.onStartTrip}
         />
@@ -856,12 +763,9 @@ function TripScreen(props: {
           t={t}
           variant="ghost"
           noTopMargin
-          label="🔊 Test alarm sound"
+          label="🔊 Test Alarm Audio"
           onPress={props.onTestAlarm}
         />
-        <Text style={[styles.note, { color: t.textDim }]}>
-          Distance and verified station arrivals drive the alarm. 100% offline and battery optimized for underground tunnels.
-        </Text>
       </View>
     );
   }
@@ -1192,7 +1096,7 @@ function App(): React.JSX.Element {
   const options = useMemo(() => Array.from(stations.keys()), [stations]);
 
   // Persistent Trip Controller at App level
-  const [mode, setMode] = useState<'splash' | 'trip' | 'planner'>('splash');
+  const [mode, setMode] = useState<'splash' | 'trip' | 'planner' | 'map'>('splash');
   const [isDark, setIsDark] = useState(true);
   const t = isDark ? DARK : LIGHT;
 
@@ -1373,6 +1277,7 @@ function App(): React.JSX.Element {
   const cancelTrip = () => {
     trip.current?.cancel();
     MetroAlarm.stopLocationUpdates().catch(() => {});
+    setMode('splash');
   };
 
   const toggleTestAlarm = async () => {
@@ -1471,6 +1376,23 @@ function App(): React.JSX.Element {
             🗺 Planner
           </Text>
         </Pressable>
+
+        <Pressable
+          style={({ pressed }) => [
+            styles.tab,
+            mode === 'map' && [styles.tabActive, { backgroundColor: t.surface }],
+            pressed && styles.tabPressed,
+          ]}
+          onPress={() => setMode('map')}>
+          <Text
+            style={[
+              styles.tabText,
+              { color: t.textDim },
+              mode === 'map' && [{ color: t.accent }, styles.tabTextActive],
+            ]}>
+            🚇 Metro Map
+          </Text>
+        </Pressable>
       </View>
 
       {/* Active Trip Banner if viewing planner while a ride is active */}
@@ -1567,7 +1489,7 @@ function App(): React.JSX.Element {
             onStepBackStation={() => trip.current?.stepBackStation()}
             onToggleDelay={() => trip.current?.setTrainDelayed(!snap.isTrainDelayed)}
           />
-        ) : (
+        ) : mode === 'planner' ? (
           <>
             <View style={styles.plannerHeaderRow}>
               <Text style={[styles.header, { color: t.text }]}>Delhi Route Planner</Text>
@@ -1600,8 +1522,6 @@ function App(): React.JSX.Element {
                     onPress={() => {
                       if (!enteredAt) {
                         setEnteredAt(hub.id);
-                      } else if (!dest || dest === hub.id) {
-                        setDest(hub.id);
                       } else {
                         setDest(hub.id);
                       }
@@ -1677,6 +1597,22 @@ function App(): React.JSX.Element {
               </>
             )}
           </>
+        ) : (
+          <MetroMapScreen
+            t={t}
+            currentOrigin={enteredAt}
+            currentDest={dest}
+            onSelectOrigin={stationId => {
+              setEnteredAt(stationId);
+              setSelectedRouteIdx(0);
+              setMode('splash');
+            }}
+            onSelectDestination={stationId => {
+              setDest(stationId);
+              setSelectedRouteIdx(0);
+              setMode('planner');
+            }}
+          />
         )}
       </ScrollView>
     </SafeAreaView>

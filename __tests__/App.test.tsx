@@ -30,14 +30,25 @@ jest.mock('../src/native/MetroAlarm', () => ({
   },
 }));
 
+const activeRoots: ReactTestRenderer.ReactTestRenderer[] = [];
+
 beforeEach(() => {
   jest.clearAllMocks();
+});
+
+afterEach(async () => {
+  await ReactTestRenderer.act(async () => {
+    while (activeRoots.length > 0) {
+      activeRoots.pop()?.unmount();
+    }
+  });
 });
 
 test('renders correctly on initial load with splash screen', async () => {
   let root: ReactTestRenderer.ReactTestRenderer;
   await ReactTestRenderer.act(async () => {
     root = ReactTestRenderer.create(<App />);
+    activeRoots.push(root);
   });
   const textInstances = root!.root.findAllByType('Text' as any);
   const texts = textInstances.map(t => t.props.children).flat().join(' ');
@@ -49,6 +60,7 @@ test('switching between tabs does not cancel or destroy trip state', async () =>
   let root: ReactTestRenderer.ReactTestRenderer;
   await ReactTestRenderer.act(async () => {
     root = ReactTestRenderer.create(<App />);
+    activeRoots.push(root);
   });
 
   const findPressable = (node: any) => {
@@ -106,6 +118,7 @@ test('renders alert mode options and switches between them', async () => {
   let root: ReactTestRenderer.ReactTestRenderer;
   await ReactTestRenderer.act(async () => {
     root = ReactTestRenderer.create(<App />);
+    activeRoots.push(root);
   });
 
   const textInstances = root!.root.findAllByType('Text' as any);
@@ -119,6 +132,7 @@ test('renders alternate route choices and station quick-edit hubs in planner', a
   let root: ReactTestRenderer.ReactTestRenderer;
   await ReactTestRenderer.act(async () => {
     root = ReactTestRenderer.create(<App />);
+    activeRoots.push(root);
   });
 
   const findPressable = (node: any) => {
@@ -155,6 +169,7 @@ test('handles native MetroAlarmDismissed event and dismisses trip alarm without 
   let root: ReactTestRenderer.ReactTestRenderer;
   await ReactTestRenderer.act(async () => {
     root = ReactTestRenderer.create(<App />);
+    activeRoots.push(root);
   });
 
   // Emit native dismiss event as if sent from AlarmActivity
@@ -173,6 +188,7 @@ test('handles native MetroMotionState event without crashing', async () => {
   let root: ReactTestRenderer.ReactTestRenderer;
   await ReactTestRenderer.act(async () => {
     root = ReactTestRenderer.create(<App />);
+    activeRoots.push(root);
   });
 
   // Emit motion state: stationary underground
@@ -194,6 +210,7 @@ test('supports station swapping on splash screen', async () => {
   let root: ReactTestRenderer.ReactTestRenderer;
   await ReactTestRenderer.act(async () => {
     root = ReactTestRenderer.create(<App />);
+    activeRoots.push(root);
   });
 
   const findPressable = (node: any) => {

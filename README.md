@@ -3,7 +3,7 @@
 > **100% Offline, Privacy-First Transit Alarm & Route Planner for the Delhi Metro**  
 > Wakes you up $N$ stops before your destination or transfer interchange—even deep underground in concrete tunnels with zero GPS, cellular data, or internet.
 
-[![Tests](https://img.shields.io/badge/tests-45%20passed-brightgreen.svg)](file:///c:/Users/Smarpit/Projects/metro-alarm-app/__tests__)
+[![Tests](https://img.shields.io/badge/tests-53%20passed-brightgreen.svg)](file:///c:/Users/Smarpit/Projects/metro-alarm-app/__tests__)
 [![Platform](https://img.shields.io/badge/platform-Android-blue.svg)](file:///c:/Users/Smarpit/Projects/metro-alarm-app/android)
 [![React Native](https://img.shields.io/badge/react--native-0.88-61dafb.svg)](https://reactnative.dev)
 [![TypeScript](https://img.shields.io/badge/typescript-5.0-3178c6.svg)](https://www.typescriptlang.org)
@@ -37,6 +37,7 @@ Generic GPS transit apps (Google Maps, Citymapper, generic radius alarms) fail i
 ## 🌟 Key Features
 
 * 🚇 **100% Offline Operation**: Zero internet or cellular data required. The complete Delhi Metro network topology, transfer graph, and timetable runtimes are bundled locally ($< 120\text{ KB}$).
+* 🗺️ **Interactive Offline Delhi Metro Map**: Dedicated full-network transit map service with smooth 2-axis pan/zoom controls, line filter chips (Blue, Yellow, Red, Magenta, Pink, etc.), station inspector cards, and 1-tap route planning / alarm setup without external map SDKs.
 * 🔀 **Top 2 Alternate Routes**: Automatically calculates and presents **Route 1 (Fastest / Direct)** vs **Route 2 (Alternate Interchange)** (e.g., via Mandi House vs Rajiv Chowk) with line badges, stop counts, and duration.
 * 🛡️ **Tunnel Dead-Reckoning & Accelerometer Fusion**:
   * Native 3-axis accelerometer integration (`Sensor.TYPE_ACCELEROMETER`) senses physical train movement vs platform dwell.
@@ -131,15 +132,17 @@ The codebase maintains 100% test pass coverage across edge cases:
 ```text
 PASS src/metro/__tests__/planner.test.ts
 PASS __tests__/TripController.test.ts
+PASS __tests__/MetroMap.test.tsx
 PASS __tests__/App.test.tsx
 
-Test Suites: 3 passed, 3 total
-Tests:       45 passed, 45 total
+Test Suites: 4 passed, 4 total
+Tests:       53 passed, 53 total
 Snapshots:   0 total
-Time:        3.81 s
 ```
 
 Key edge cases covered:
+* Offline map viewer panning, line filtering, zoom controls, and station inspector actions.
+* Cross-service deep linking: setting boarding station and destination from map to alarm/planner.
 * Station boundary underflow (`cursor === 0`) and terminus overflow clamping.
 * Noisy GPS rejection ($> 80\text{m}$) vs tunnel cell-tower snap tolerance ($600\text{m}$).
 * Delay hold persistence against incoming accelerometer vibration events.

@@ -854,27 +854,10 @@ export class TripController {
   }
 
   private pinFor(stationId: string, lineId?: string): StationPin | null {
-    if (lineId) {
-      const line = this.network.lines.find(l => l.id === lineId);
-      if (line) {
-        for (const seg of line.segments) {
-          for (let i = 0; i < seg.stations.length; i++) {
-            const st = seg.stations[i];
-            if (st.id === stationId && st.lat != null && st.lon != null) {
-              const next = seg.stations[i + 1];
-              return {
-                id: st.id,
-                name: st.name,
-                lat: st.lat,
-                lon: st.lon,
-                toNextS: next?.toNextS ?? 160,
-              };
-            }
-          }
-        }
-      }
-    }
-    for (const line of this.network.lines) {
+    const targetLine = lineId ? this.network.lines.find(l => l.id === lineId) : null;
+    const linesToSearch = targetLine ? [targetLine, ...this.network.lines.filter(l => l.id !== lineId)] : this.network.lines;
+
+    for (const line of linesToSearch) {
       for (const seg of line.segments) {
         for (let i = 0; i < seg.stations.length; i++) {
           const st = seg.stations[i];

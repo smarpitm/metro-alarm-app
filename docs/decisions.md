@@ -3,6 +3,21 @@
 Format per entry: **Decision / Why / Alternatives rejected / Consequences**.
 Newest entries at the top. Keep entries small and factual; avoid re-litigating.
 
+## D-014 · 100% Offline Interactive Delhi Metro Map Service & Ponytail Reductions
+
+**Date:** Nov 2026 · **Status:** implemented
+
+- **Decision:**
+  1. Add a dedicated, 100% offline Delhi Metro Map service as a 4th top-level navigation tab (`🚇 Metro Map`, `mode === 'map'`).
+  2. Implement an ultra-lightweight, high-resolution multi-zoom schematic map asset (`assets/map/delhi_metro_map.png` / `.webp`, ~200 KB) rendered inside a native two-axis Pan/Zoom ScrollView with floating HUD controls (`➕ Zoom In`, `➖ Zoom Out`, `↺ Reset View`).
+  3. Provide an interactive Station & Line Explorer with line filter chips and direct 1-tap actions: "Set as Boarding Station" and "Set as Destination", seamlessly bridging visual map exploration into the Route Planner and Journey Alarm.
+  4. Fold in Ponytail code cleanups: eliminate duplicate 122-line idle setup UI in `TripScreen`, remove unused `@react-native/new-app-screen` template dependency, delete empty placeholder file `interchange.ts`, and shrink `pinFor` duplicate loops.
+- **Why:** Commuters frequently need to visually orient themselves on the full transit map or look up transfer corridors without running a point-to-point path calculation or activating an alarm. Providing a lightweight, offline-first viewer satisfies this transit need with zero external map library overhead.
+- **Alternatives rejected:** Third-party Map SDKs (Google Maps, Mapbox, MapLibre) which add 30+ MB binary bloat, require internet API keys, and fail offline in tunnels; complex SVG DOM trees that lag on budget devices.
+- **Consequences:** Visual network exploration is instant, completely offline, battery-friendly, and adds only ~200 KB to app assets while reducing codebase complexity.
+
+---
+
 ## D-013 · Independent Multi-Leg Interchange Dismissal and Zero-Buffer Alarm Trigger Guarantee
 
 **Date:** Oct 2026 · **Status:** implemented
